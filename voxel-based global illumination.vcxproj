@@ -132,13 +132,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\prog_test.cpp" />
+    <ClCompile Include="src\program.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\stb_image.cpp" />
     <ClCompile Include="src\test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\prog_test.h" />
+    <ClInclude Include="src\program.h" />
     <ClInclude Include="src\shader.h" />
     <ClInclude Include="src\stb_image.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\test.frag" />
+    <None Include="shader\test.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

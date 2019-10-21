@@ -24,6 +24,12 @@
     <ClCompile Include="src\stb_image.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\program.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\prog_test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\shader.h">
@@ -32,5 +38,15 @@
     <ClInclude Include="src\stb_image.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="src\program.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\prog_test.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\test.frag" />
+    <None Include="shader\test.vert" />
   </ItemGroup>
 </Project>

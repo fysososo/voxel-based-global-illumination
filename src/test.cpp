@@ -6,37 +6,39 @@
 
 #include <iostream>
 #include "stb_image.h"
+
+#include "prog_test.h"
 using namespace std;
 
-#pragma region 顶点着色器源码
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"layout (location = 1) in float aColor;\n"
-"layout (location = 2) in vec2 aTexCoord;\n"
-"out float outColor;\n"
-"out vec2 TexCoord;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"   outColor = aColor;\n"
-"   TexCoord = aTexCoord;\n"
-"}\0";
-#pragma endregion
-
-#pragma region 片元着色器源码
-const char* fragmentShaderSource = "#version 330 core\n"
-"#extension GL_ARB_explicit_uniform_location : enable\n"
-"out vec4 FragColor;\n"
-"in float outColor;\n"
-"in vec2 TexCoord;;\n"
-"layout (location = 0) uniform float blueValue;\n"
-"layout (location = 1) uniform sampler2D ourTexture;\n"
-"void main()\n"
-"{\n"
-"   FragColor =  mix(texture(ourTexture, TexCoord), vec4(1.0f * outColor, 0.5 * outColor, blueValue * outColor, 1.0f), 0.4);\n"
-"}\n\0";
-#pragma endregion
-
+//着色器源码：使用文件单独储存
+//#pragma region 顶点着色器源码
+//const char* vertexShaderSource = "#version 330 core\n"
+//"layout (location = 0) in vec3 aPos;\n"
+//"layout (location = 1) in float aColor;\n"
+//"layout (location = 2) in vec2 aTexCoord;\n"
+//"out float outColor;\n"
+//"out vec2 TexCoord;\n"
+//"void main()\n"
+//"{\n"
+//"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+//"   outColor = aColor;\n"
+//"   TexCoord = aTexCoord;\n"
+//"}\0";
+//#pragma endregion
+//
+//#pragma region 片元着色器源码
+//const char* fragmentShaderSource = "#version 330 core\n"
+//"#extension GL_ARB_explicit_uniform_location : enable\n"
+//"out vec4 FragColor;\n"
+//"in float outColor;\n"
+//"in vec2 TexCoord;;\n"
+//"layout (location = 0) uniform float blueValue;\n"
+//"layout (location = 1) uniform sampler2D ourTexture;\n"
+//"void main()\n"
+//"{\n"
+//"   FragColor =  mix(texture(ourTexture, TexCoord), vec4(1.0f * outColor, 0.5 * outColor, blueValue * outColor, 1.0f), 0.4);\n"
+//"}\n\0";
+//#pragma endregion
 
 #pragma region 窗口大小变化回调函数
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -94,54 +96,62 @@ int main()
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	#pragma endregion
 
-	#pragma region 设置顶点着色器
-	GLuint vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
+	#pragma region 测试封装好的着色器程序类
+	ProgTest progTest = ProgTest();
+	progTest.AttachShader(GL_VERTEX_SHADER, "shader/test.vert");
+	progTest.AttachShader(GL_FRAGMENT_SHADER, "shader/test.frag");
+	progTest.Link();
 
-	GLint success;
-	GLchar infoLog[512];
-	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);//获取最后一次编译是否成功的信息
-	if (!success)
-	{
-		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);//获取信息日志
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-	#pragma endregion
+	//#pragma region 设置顶点着色器
+	//GLuint vertexShader;
+	//vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	//glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	//glCompileShader(vertexShader);
 
-	#pragma region 设置片元着色器
-	GLuint fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
+	//GLint success;
+	//GLchar infoLog[512];
+	//glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);//获取最后一次编译是否成功的信息
+	//if (!success)
+	//{
+	//	glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);//获取信息日志
+	//	std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+	//}
+	//#pragma endregion
 
-	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);//获取最后一次编译是否成功的信息
-	if (!success)
-	{
-		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);//获取着色器编译信息日志
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-	}
-	#pragma endregion
+	//#pragma region 设置片元着色器
+	//GLuint fragmentShader;
+	//fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	//glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+	//glCompileShader(fragmentShader);
 
-	#pragma region 链接所有着色器生成着色器程序
-	GLint shaderProgram;
-	shaderProgram = glCreateProgram();
+	//glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);//获取最后一次编译是否成功的信息
+	//if (!success)
+	//{
+	//	glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);//获取着色器编译信息日志
+	//	std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+	//}
+	//#pragma endregion
 
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
+	//#pragma region 链接所有着色器生成着色器程序
+	//GLuint shaderProgram;
+	//shaderProgram = glCreateProgram();
 
-	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);//获取最后一次链接是否成功的信息
-	if (!success) {
-		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);//获取着色器程序链接信息日志
-		std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
-	}
+	//glAttachShader(shaderProgram, vertexShader);
+	//glAttachShader(shaderProgram, fragmentShader);
+	//glLinkProgram(shaderProgram);
+
+	//glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);//获取最后一次链接是否成功的信息
+	//if (!success) {
+	//	glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);//获取着色器程序链接信息日志
+	//	std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
+	//}
 
 
-	//过河桥：只是标记为删除而已，没有附加在任何程序时才会真正删除
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	////过河桥：只是标记为删除而已，没有附加在任何程序时才会真正删除
+	//glDeleteShader(vertexShader);
+	//glDeleteShader(fragmentShader);
+	//#pragma endregion
+
 	#pragma endregion
 
 	#pragma region 把从哪些VBO，如何获取顶点，绑定了哪个EBO 的信息储存到VAO中
@@ -241,11 +251,11 @@ int main()
 		
 		#pragma region 绘制图元
 
-		glUseProgram(shaderProgram);//使用设置好的着色器程序
+		progTest.Use();//使用设置好的着色器程序
 		//实时改变透明度
 		GLfloat timeValue = glfwGetTime();
 		GLfloat blueValue = (sin(timeValue) / 2.0f) + 0.5f;
-		glUniform1f(0, blueValue);
+		progTest.setBlueValue(blueValue);
 		glActiveTexture(GL_TEXTURE0);//0号纹理单元默认激活
 		glBindTexture(GL_TEXTURE_2D, texture);//绑定该纹理到当前的纹理单元
 		glBindVertexArray(VAO);//绑定设置好的VAO，这样顶点着色器就该知道从哪、该如何获取顶点数据了
