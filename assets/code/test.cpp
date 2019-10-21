@@ -107,7 +107,6 @@ int main()
 	//vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	//glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	//glCompileShader(vertexShader);
-
 	//GLint success;
 	//GLchar infoLog[512];
 	//glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);//获取最后一次编译是否成功的信息
@@ -123,7 +122,6 @@ int main()
 	//fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	//glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
 	//glCompileShader(fragmentShader);
-
 	//glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);//获取最后一次编译是否成功的信息
 	//if (!success)
 	//{
@@ -135,18 +133,14 @@ int main()
 	//#pragma region 链接所有着色器生成着色器程序
 	//GLuint shaderProgram;
 	//shaderProgram = glCreateProgram();
-
 	//glAttachShader(shaderProgram, vertexShader);
 	//glAttachShader(shaderProgram, fragmentShader);
 	//glLinkProgram(shaderProgram);
-
 	//glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);//获取最后一次链接是否成功的信息
 	//if (!success) {
 	//	glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);//获取着色器程序链接信息日志
 	//	std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n" << infoLog << std::endl;
 	//}
-
-
 	////过河桥：只是标记为删除而已，没有附加在任何程序时才会真正删除
 	//glDeleteShader(vertexShader);
 	//glDeleteShader(fragmentShader);

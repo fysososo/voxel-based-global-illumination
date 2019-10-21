@@ -31,14 +31,14 @@ void Program::AttachShader(GLenum shaderType, const std::string& filepath)
 	// 3、编译
     glShaderSource(shader, 1, &shaderCode, NULL);
     glCompileShader(shader);
-    checkCompileErrors(shader, shaderType);
+    CheckErrors(shader, shaderType);
 
 	// 4、附加该shader，并添加到该程序的shader目录，便于之后统一删除
     glAttachShader(ID, shader);
 	shaders.push_back(shader);
 }
 
-void Program::checkCompileErrors(GLuint shader, GLenum shaderType)
+void Program::CheckErrors(GLuint shader, GLenum shaderType)
 {
 	//获取着色器类型
 	std::string type;
@@ -79,7 +79,7 @@ void Program::checkCompileErrors(GLuint shader, GLenum shaderType)
 void Program::Link()
 {
 	glLinkProgram(ID);
-	checkCompileErrors(ID, 0);
+	CheckErrors(ID, 0);
 }
 
 void Program::Use() const

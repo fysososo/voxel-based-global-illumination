@@ -56,7 +56,7 @@ private:
 	/// </summary>
 	/// <param name="shader">shader ID</param>
 	/// <param name="shaderType">Shader¿‡–Õ</param>
-	void checkCompileErrors(GLuint shader, GLenum shaderType);
+	void CheckErrors(GLuint shader, GLenum shaderType);
 
 };
 

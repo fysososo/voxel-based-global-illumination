@@ -15,38 +15,59 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\glad.c">
+    <ClCompile Include="assets\code\render\prog_test.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\test.cpp">
+    <ClCompile Include="assets\code\render\program.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\stb_image.cpp">
+    <ClCompile Include="assets\code\render\renderer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\program.cpp">
+    <ClCompile Include="assets\code\scene\material.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\prog_test.cpp">
+    <ClCompile Include="assets\code\scene\mesh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="assets\code\scene\model.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="assets\code\support\glad.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="assets\code\support\stb_image.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="assets\code\test.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\shader.h">
+    <ClInclude Include="assets\code\render\prog_test.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\stb_image.h">
+    <ClInclude Include="assets\code\render\program.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\program.h">
+    <ClInclude Include="assets\code\render\renderer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\prog_test.h">
+    <ClInclude Include="assets\code\scene\material.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="assets\code\scene\mesh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="assets\code\scene\model.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="assets\code\support\stb_image.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shader\test.frag" />
-    <None Include="shader\test.vert" />
+    <None Include="assets\code\render\shader\test.frag" />
+    <None Include="assets\code\render\shader\test.vert" />
   </ItemGroup>
 </Project>
