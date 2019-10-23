@@ -95,6 +95,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,12 +136,18 @@
     <ClCompile Include="assets\code\render\renderer.cpp" />
     <ClCompile Include="assets\code\render\prog_test.cpp" />
     <ClCompile Include="assets\code\render\program.cpp" />
-    <ClCompile Include="assets\code\support\glad.c" />
-    <ClCompile Include="assets\code\support\stb_image.cpp" />
+    <ClCompile Include="assets\code\support\glad.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="assets\code\support\stb_image.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="assets\code\test.cpp" />
     <ClCompile Include="assets\code\scene\model.cpp" />
     <ClCompile Include="assets\code\scene\mesh.cpp" />
     <ClCompile Include="assets\code\scene\material.cpp" />
+    <ClCompile Include="assets\code\scene\camera.cpp" />
+    <ClCompile Include="include\stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="assets\code\render\renderer.h" />
@@ -150,6 +157,8 @@
     <ClInclude Include="assets\code\scene\model.h" />
     <ClInclude Include="assets\code\scene\mesh.h" />
     <ClInclude Include="assets\code\scene\material.h" />
+    <ClInclude Include="assets\code\scene\camera.h" />
+    <ClInclude Include="include\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\code\render\shader\test.frag" />

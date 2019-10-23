@@ -1,8 +1,13 @@
+#include <stdafx.h>
 #include "program.h"
-
 Program::Program()
 {
 	ID = glCreateProgram();
+}
+
+GLuint Program::getID()
+{
+	return ID;
 }
 
 void Program::AttachShader(GLenum shaderType, const std::string& filepath)
@@ -23,18 +28,18 @@ void Program::AttachShader(GLenum shaderType, const std::string& filepath)
 	{
 		std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
 	}
-    const GLchar* shaderCode = code.c_str();
+	const GLchar* shaderCode = code.c_str();
 
-    // 2、创建
-    GLuint shader = glCreateShader(shaderType);
+	// 2、创建
+	GLuint shader = glCreateShader(shaderType);
 
 	// 3、编译
-    glShaderSource(shader, 1, &shaderCode, NULL);
-    glCompileShader(shader);
-    CheckErrors(shader, shaderType);
+	glShaderSource(shader, 1, &shaderCode, NULL);
+	glCompileShader(shader);
+	CheckErrors(shader, shaderType);
 
 	// 4、附加该shader，并添加到该程序的shader目录，便于之后统一删除
-    glAttachShader(ID, shader);
+	glAttachShader(ID, shader);
 	shaders.push_back(shader);
 }
 
@@ -85,6 +90,10 @@ void Program::Link()
 void Program::Use() const
 {
 	glUseProgram(ID);
+}
+
+void Program::SetMaterialUniforms(const Material& material) const
+{
 }
 
 Program::~Program()

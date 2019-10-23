@@ -3,6 +3,5 @@
 
 class ProgTest : public Program
 {
-public:
-	void setBlueValue(GLfloat blueValue);
+
 };
