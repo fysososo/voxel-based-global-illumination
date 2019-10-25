@@ -136,7 +136,7 @@
     <ClCompile Include="assets\code\core\assets.cpp" />
     <ClCompile Include="assets\code\core\engine.cpp" />
     <ClCompile Include="assets\code\renderer\renderer.cpp" />
-    <ClCompile Include="assets\code\program\program.cpp" />
+    <ClCompile Include="assets\code\shader\program.cpp" />
     <ClCompile Include="assets\code\support\glad.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -149,14 +149,13 @@
     <ClCompile Include="assets\code\scene\material.cpp" />
     <ClCompile Include="assets\code\scene\camera.cpp" />
     <ClCompile Include="include\stdafx.cpp" />
-    <ClCompile Include="assets\code\renderer\r_voxelization.cpp" />
-    <ClCompile Include="assets\code\program\p_voxelization.cpp" />
+    <ClCompile Include="assets\code\renderer\voxelization.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="assets\code\core\assets.h" />
     <ClInclude Include="assets\code\core\engine.h" />
     <ClInclude Include="assets\code\renderer\renderer.h" />
-    <ClInclude Include="assets\code\program\program.h" />
+    <ClInclude Include="assets\code\shader\program.h" />
     <ClInclude Include="assets\code\support\single_active.h" />
     <ClInclude Include="assets\code\support\stb_image.h" />
     <ClInclude Include="assets\code\scene\model.h" />
@@ -164,10 +163,11 @@
     <ClInclude Include="assets\code\scene\material.h" />
     <ClInclude Include="assets\code\scene\camera.h" />
     <ClInclude Include="include\stdafx.h" />
-    <ClInclude Include="assets\code\renderer\r_voxelization.h" />
-    <ClInclude Include="assets\code\program\p_voxelization.h" />
+    <ClInclude Include="assets\code\renderer\voxelization.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="assets\code\shader\default.frag" />
+    <None Include="assets\code\shader\default.vert" />
     <None Include="assets\code\shader\test.frag" />
     <None Include="assets\code\shader\test.vert" />
   </ItemGroup>

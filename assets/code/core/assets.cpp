@@ -1,11 +1,8 @@
 #include <stdafx.h>
 #include "assets.h"
 
-//程序类
-#include "../program/p_voxelization.h"
-
 //渲染器类
-#include "../renderer/r_voxelization.h"
+#include "../renderer/voxelization.h"
 
 unique_ptr<AssetsManager>& AssetsManager::Instance()
 {
@@ -27,13 +24,17 @@ AssetsManager::AssetsManager()
 
 	//加载模型
 	models["test"] = make_shared<Model>("assets/model/test/nanosuit.obj");
-	
+
 	//创建程序，并附加shader
-	programs["Voxelization"] = make_shared<VoxelizationProgram>();
+	programs["Voxelization"] = make_shared<Program>();
 	programs["Voxelization"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/test.vert");
 	programs["Voxelization"]->AttachShader(GL_FRAGMENT_SHADER, "assets/code/shader/test.frag");
 	
-	
+	programs["Default"] = make_shared<Program>();
+	programs["Default"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/default.vert");
+	programs["Default"]->AttachShader(GL_FRAGMENT_SHADER, "assets/code/shader/default.frag");
+
+
 	//链接生成所有shader程序
 	for (auto& prog : programs)
 	{

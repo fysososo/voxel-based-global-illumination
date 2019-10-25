@@ -27,18 +27,27 @@ using namespace std;
 
 
 //自定义结构
-struct Texture {
-	GLuint id;
-	string type;
-	string path;
+struct Texture
+{
+	GLuint ID;
+	string Type;
+	string Path;
 };
 
-struct Vertex {
+struct Vertex
+{
 	glm::vec3 Position;//位置
 	glm::vec3 Normal;//法线
 	glm::vec2 TexCoords;//纹理坐标
 	glm::vec3 Tangent;//切线
 	glm::vec3 Bitangent;//副切线
+};
+
+struct BoundingBox {
+	glm::vec3 MinPoint = glm::vec3(std::numeric_limits<float>::infinity());//坐标最小点
+	glm::vec3 MaxPoint = glm::vec3(std::numeric_limits<float>::lowest());//坐标最大点
+	glm::vec3 Center;//中心点
+	glm::vec3 Size;//尺寸
 };
 
 //自定义文件

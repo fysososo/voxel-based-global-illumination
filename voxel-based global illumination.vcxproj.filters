@@ -36,18 +36,6 @@
     <ClCompile Include="assets\code\scene\camera.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="assets\code\core\assets.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="assets\code\program\p_voxelization.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="assets\code\program\program.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="assets\code\renderer\r_voxelization.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="assets\code\renderer\renderer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -55,6 +43,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="assets\code\core\engine.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="assets\code\shader\program.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="assets\code\renderer\voxelization.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="assets\code\core\assets.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -83,24 +80,23 @@
     <ClInclude Include="assets\code\core\assets.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="assets\code\program\p_voxelization.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="assets\code\program\program.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="assets\code\renderer\r_voxelization.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="assets\code\renderer\renderer.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="assets\code\core\engine.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="assets\code\shader\program.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="assets\code\renderer\voxelization.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\code\shader\test.frag" />
     <None Include="assets\code\shader\test.vert" />
+    <None Include="assets\code\shader\default.frag" />
+    <None Include="assets\code\shader\default.vert" />
   </ItemGroup>
 </Project>

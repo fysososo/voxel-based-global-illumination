@@ -2,7 +2,7 @@
 #include <stdafx.h>
 #include "../scene/camera.h"
 #include "../scene/model.h"
-#include "../program/program.h"
+#include "../shader/program.h"
 #include "../renderer/renderer.h"
 #include <map>
 

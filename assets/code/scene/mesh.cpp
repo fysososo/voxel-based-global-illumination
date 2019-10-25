@@ -10,13 +10,10 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, shared_ptr<Mat
 	setupMesh();//设置网格
 }
 
-void Mesh::Draw(Program& shader)
+void Mesh::Draw()
 {
-	//绑定纹理
-	bindTexture(shader);
-
-	//绑定材质
-	shader.SetMaterialUniforms(*material);
+	//绑定材质和纹理
+	Renderer::Active()->SetMaterialUniforms(*material);
 
 	//绘制mesh
 	glBindVertexArray(VAO);
@@ -61,40 +58,4 @@ void Mesh::setupMesh()
 
 
 	glBindVertexArray(0);
-}
-
-void Mesh::bindTexture(Program& shader)
-{
-	//绑定漫反射纹理
-	GLuint num = 0;
-	for (GLuint i = 0; i < material->diffuseMaps.size(); i++)
-	{
-		glActiveTexture(GL_TEXTURE0 + num);
-		string name = "texture_diffuse";
-		string number = to_string(i);
-		glUniform1i(glGetUniformLocation(shader.getID(), (name + number).c_str()), i);
-		glBindTexture(GL_TEXTURE_2D, material->diffuseMaps[i]->id);
-	}
-
-	//绑定镜面反射纹理
-	for (GLuint i = 0; i < material->specularMaps.size(); i++)
-	{
-		glActiveTexture(GL_TEXTURE0 + num);
-		string name = "texture_specular";
-		string number = to_string(i);
-		glUniform1i(glGetUniformLocation(shader.getID(), (name + number).c_str()), i);
-		glBindTexture(GL_TEXTURE_2D, material->specularMaps[i]->id);
-	}
-
-	//绑定切线空间的法线反射纹理
-	for (GLuint i = 0; i < material->normalMaps.size(); i++)
-	{
-		glActiveTexture(GL_TEXTURE0 + num);
-		string name = "texture_normal";
-		string number = to_string(i);
-		glUniform1i(glGetUniformLocation(shader.getID(), (name + number).c_str()), i);
-		glBindTexture(GL_TEXTURE_2D, material->normalMaps[i]->id);
-	}
-
-	glActiveTexture(GL_TEXTURE0);
 }

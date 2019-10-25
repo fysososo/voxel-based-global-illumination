@@ -92,10 +92,6 @@ void Program::Use() const
 	glUseProgram(ID);
 }
 
-void Program::SetMaterialUniforms(const Material& material) const
-{
-}
-
 Program::~Program()
 {
 	for (std::vector<GLuint>::const_iterator iter = shaders.cbegin(); iter != shaders.cend(); iter++)

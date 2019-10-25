@@ -1,17 +1,27 @@
 #include <stdafx.h>
 #include "model.h"
 
+
 Model::Model(string const& path, bool gamma) : gammaCorrection(gamma)
 {
 	loadModel(path);
 }
 
-void Model::Draw(Program& shader)
+void Model::Draw()
 {
 	for (unsigned int i = 0; i < meshes.size(); i++)
 	{
-		meshes[i]->Draw(shader);
+		meshes[i]->Draw();
 	}
+}
+
+void Model::DrawBoundingBox()
+{
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 Model::~Model()
@@ -29,8 +39,9 @@ void Model::loadModel(string const& path)
 	}
 	directory = path.substr(0, path.find_last_of('/'));
 
-	loadMaterials();
-	loadMeshes();
+	loadMaterials();//加载材质
+	loadMeshes();//加载网格
+	SetupBoundingBox();//设置包围盒
 
 	scene = nullptr;
 }
@@ -118,6 +129,10 @@ void Model::loadMeshes()
 
 			//该顶点载入完毕
 			vertices.push_back(vertex);
+
+			//该顶点是否更新包围盒顶点
+			boundingBox.MinPoint = min(boundingBox.MinPoint, vertex.Position);
+			boundingBox.MaxPoint = max(boundingBox.MaxPoint, vertex.Position);
 		}
 
 		//获取所有图元（三角形）的索引
@@ -142,7 +157,6 @@ void Model::loadMeshes()
 		}
 
 		//该网格载入完毕
-
 		meshes.push_back(make_shared<Mesh>(vertices, indices, material));
 	}
 }
@@ -162,7 +176,7 @@ vector<shared_ptr<Texture>> Model::loadMaterialTextures(aiMaterial* mat, aiTextu
 		bool skip = false;
 		for (GLuint j = 0; j < textures.size(); j++)
 		{
-			if (std::strcmp(textures[j]->path.data(), str.C_Str()) == 0)
+			if (std::strcmp(textures[j]->Path.data(), str.C_Str()) == 0)
 			{
 				//已加载，只获取指针
 				MatTextures.push_back(textures[j]);
@@ -174,9 +188,9 @@ vector<shared_ptr<Texture>> Model::loadMaterialTextures(aiMaterial* mat, aiTextu
 		{
 			//未加载，先创建该材质
 			shared_ptr<Texture> texture = make_shared<Texture>();
-			texture->id = TextureFromFile(str.C_Str(), this->directory);
-			texture->type = typeName;
-			texture->path = str.C_Str();
+			texture->ID = TextureFromFile(str.C_Str(), this->directory);
+			texture->Type = typeName;
+			texture->Path = str.C_Str();
 			textures.push_back(texture);
 			//再获取指针
 			MatTextures.push_back(textures.back());
@@ -185,7 +199,7 @@ vector<shared_ptr<Texture>> Model::loadMaterialTextures(aiMaterial* mat, aiTextu
 	return MatTextures;
 }
 
-GLuint Model::TextureFromFile(const char* path, const string& directory, bool gamma)
+GLuint Model::TextureFromFile(const GLchar* path, const string& directory, GLboolean gamma)
 {
 	string filename = string(path);
 	filename = directory + '/' + filename;
@@ -223,4 +237,60 @@ GLuint Model::TextureFromFile(const char* path, const string& directory, bool ga
 	}
 
 	return textureID;
+}
+
+void Model::SetupBoundingBox()
+{
+	//计算包围盒的中点和尺寸
+	boundingBox.Center = (boundingBox.MinPoint + boundingBox.MaxPoint) * 0.5f;
+	boundingBox.Size = boundingBox.MaxPoint- boundingBox.MinPoint;
+
+	//设置VAO
+	GLfloat vertices[] =
+	{
+		boundingBox.MinPoint.x, boundingBox.MinPoint.y, boundingBox.MinPoint.z,//左后下0
+		boundingBox.MinPoint.x, boundingBox.MinPoint.y, boundingBox.MaxPoint.z,//左前下1
+		boundingBox.MaxPoint.x, boundingBox.MinPoint.y, boundingBox.MaxPoint.z,//右前下2
+		boundingBox.MaxPoint.x, boundingBox.MinPoint.y, boundingBox.MinPoint.z,//右后下3
+
+		boundingBox.MinPoint.x, boundingBox.MaxPoint.y, boundingBox.MinPoint.z,//左后上4
+		boundingBox.MinPoint.x, boundingBox.MaxPoint.y, boundingBox.MaxPoint.z,//左前上5
+		boundingBox.MaxPoint.x, boundingBox.MaxPoint.y, boundingBox.MaxPoint.z,//右前上6
+		boundingBox.MaxPoint.x, boundingBox.MaxPoint.y, boundingBox.MinPoint.z //右后上7
+	};
+
+	GLuint indices[] =
+	{
+		0,1,2,//下1
+		2,3,0,//下2
+		4,5,7,//上1
+		7,6,5,//上2
+		1,2,5,//前1
+		5,6,2,//前2
+		0,3,7,//后1
+		7,4,0,//后2
+		0,1,5,//左1
+		5,4,0,//左2
+		2,3,7,//右1
+		7,6,2 //右2
+	};
+
+	GLuint VBO, EBO;
+
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 }

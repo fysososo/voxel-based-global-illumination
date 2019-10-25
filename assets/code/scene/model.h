@@ -1,19 +1,20 @@
 #pragma once
-#include <stdafx.h>
-
 #include "mesh.h"
-#include "../program/program.h"
-
 
 class Model
 {
 public:
+	BoundingBox boundingBox;//包围盒
+
 	//传入模型文件路径，载入模型
 	Model(string const& path, bool gamma = false);
 
 	//绘制模型
-	void Draw(Program& shader);
+	void Draw();
 
+	//绘制包围盒
+	void DrawBoundingBox();
+	
 	~Model();
 
 private:
@@ -23,6 +24,7 @@ private:
 	vector<shared_ptr<Material>> materials;//所有材质（纹理指针）数据
 	vector<shared_ptr<Mesh>> meshes;//所有网格（顶点、索引、材质指针）数据
 	bool gammaCorrection;//伽马修正
+	GLuint VAO;//包围盒的VAO
 
 	//加载模型
 	void loadModel(string const& path);
@@ -37,7 +39,10 @@ private:
 	vector<shared_ptr<Texture>> loadMaterialTextures(aiMaterial* mat, aiTextureType type, string typeName);
 	
 	//从文件中获取纹理数据
-	GLuint TextureFromFile(const char* path, const string& directory, bool gamma = false);
+	GLuint TextureFromFile(const GLchar* path, const string& directory, GLboolean gamma = false);
+
+	//设置包围盒
+	void SetupBoundingBox();
 	
 };
 

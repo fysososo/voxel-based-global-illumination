@@ -87,9 +87,6 @@ public:
 	}
 	#pragma endregion
 
-	//给着色器程序传输材质信息（绘制mesh时调用）
-	virtual void SetMaterialUniforms(const Material& material) const;
-
 	~Program();
 	Program& operator=(Program const& r) = delete;
 
