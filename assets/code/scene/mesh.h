@@ -1,7 +1,7 @@
 #pragma once
 #include <stdafx.h>
 
-#include "../render/program.h"
+#include "../program/program.h"
 #include "material.h"
 
 class Mesh {

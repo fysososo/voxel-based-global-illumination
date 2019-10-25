@@ -133,36 +133,43 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="assets\code\render\renderer.cpp" />
-    <ClCompile Include="assets\code\render\prog_test.cpp" />
-    <ClCompile Include="assets\code\render\program.cpp" />
+    <ClCompile Include="assets\code\core\assets.cpp" />
+    <ClCompile Include="assets\code\core\engine.cpp" />
+    <ClCompile Include="assets\code\renderer\renderer.cpp" />
+    <ClCompile Include="assets\code\program\program.cpp" />
     <ClCompile Include="assets\code\support\glad.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="assets\code\support\stb_image.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="assets\code\test.cpp" />
+    <ClCompile Include="assets\code\core\main.cpp" />
     <ClCompile Include="assets\code\scene\model.cpp" />
     <ClCompile Include="assets\code\scene\mesh.cpp" />
     <ClCompile Include="assets\code\scene\material.cpp" />
     <ClCompile Include="assets\code\scene\camera.cpp" />
     <ClCompile Include="include\stdafx.cpp" />
+    <ClCompile Include="assets\code\renderer\r_voxelization.cpp" />
+    <ClCompile Include="assets\code\program\p_voxelization.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="assets\code\render\renderer.h" />
-    <ClInclude Include="assets\code\render\prog_test.h" />
-    <ClInclude Include="assets\code\render\program.h" />
+    <ClInclude Include="assets\code\core\assets.h" />
+    <ClInclude Include="assets\code\core\engine.h" />
+    <ClInclude Include="assets\code\renderer\renderer.h" />
+    <ClInclude Include="assets\code\program\program.h" />
+    <ClInclude Include="assets\code\support\single_active.h" />
     <ClInclude Include="assets\code\support\stb_image.h" />
     <ClInclude Include="assets\code\scene\model.h" />
     <ClInclude Include="assets\code\scene\mesh.h" />
     <ClInclude Include="assets\code\scene\material.h" />
     <ClInclude Include="assets\code\scene\camera.h" />
     <ClInclude Include="include\stdafx.h" />
+    <ClInclude Include="assets\code\renderer\r_voxelization.h" />
+    <ClInclude Include="assets\code\program\p_voxelization.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assets\code\render\shader\test.frag" />
-    <None Include="assets\code\render\shader\test.vert" />
+    <None Include="assets\code\shader\test.frag" />
+    <None Include="assets\code\shader\test.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

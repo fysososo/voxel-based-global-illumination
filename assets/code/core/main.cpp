@@ -1,0 +1,27 @@
+#include <stdafx.h>
+#include "engine.h"
+
+int main()
+{
+	try 
+	{
+		Engine::Instance()->RenderLoop();
+	}
+	catch(int error)
+	{
+		switch (error)
+		{
+		case 0:
+			std::cout << "Failed to create GLFW window" << std::endl;
+			glfwTerminate();
+			return -1;
+		case 1:
+			std::cout << "Failed to initialize GLAD" << std::endl;
+			return -1;
+		}
+	}
+
+	Engine::Terminate();
+	glfwTerminate();
+	return 0;
+}

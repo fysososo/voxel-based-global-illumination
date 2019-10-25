@@ -1,5 +1,6 @@
 #pragma once
 #include <stdafx.h>
+#include "../support/single_active.h"
 
 //相机能做的运动：前后左右
 enum Camera_Movement {
@@ -16,7 +17,7 @@ const float SPEED = 2.5f;//相机移动速度
 const float SENSITIVITY = 0.1f;//相机转向敏感度
 const float ZOOM = 45.0f;//
 
-class Camera
+class Camera : public SingleActive<Camera>
 {
 public:
 	glm::vec3 Position;//相机位置

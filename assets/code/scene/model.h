@@ -2,7 +2,7 @@
 #include <stdafx.h>
 
 #include "mesh.h"
-#include "../render/program.h"
+#include "../program/program.h"
 
 
 class Model

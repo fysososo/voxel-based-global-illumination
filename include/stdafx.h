@@ -8,12 +8,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-//加载文件
+//支持
 #include "../assets/code/support/stb_image.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
 
 //C++
 #include <iostream>
@@ -23,7 +22,9 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <memory>
 using namespace std;
+
 
 //自定义结构
 struct Texture {
@@ -40,3 +41,6 @@ struct Vertex {
 	glm::vec3 Bitangent;//副切线
 };
 
+//自定义文件
+#include "../assets/code/core/assets.h"
+#include "../assets/code/core/engine.h"
