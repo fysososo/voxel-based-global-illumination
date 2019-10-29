@@ -1,0 +1,2 @@
+C:/Users/fyso/source/repos/fysososo/voxel-based-global-illumination/include/glm/out/build/x64-Debug/CMakeFiles/edit_cache.dir
+C:/Users/fyso/source/repos/fysososo/voxel-based-global-illumination/include/glm/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir

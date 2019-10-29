@@ -5,6 +5,7 @@ int main()
 {
 	try 
 	{
+		//这里是主循环
 		Engine::Instance()->RenderLoop();
 	}
 	catch(int error)
