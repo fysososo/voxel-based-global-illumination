@@ -1,19 +1,39 @@
 #pragma once
 #include <stdafx.h>
 
-
 class Material
 {
-public:
-	string name;//材质名
-	glm::vec4 Ka;//颜色光照albedo
-	glm::vec4 Kd;//漫反射diffuse
-	glm::vec4 Ks;//镜面反射specular
-			
-	vector<shared_ptr<Texture>> diffuseMaps;//漫反射贴图
-	vector<shared_ptr<Texture>> specularMaps;//镜面反射贴图
-	vector<shared_ptr<Texture>> normalMaps;//切线空间的法线贴图
 
+public:
+
+	enum en_textureType {
+		en_TEXTURE_NORMAL = 0,
+		en_TEXTURE_ROUGHNESS,
+		en_TEXTURE_METANESS,
+		en_TEXTURE_ALBEDO
+	};
+
+	string matName;
+
+	float roughness;
+	float IOR;
+	float metalness;
+	glm::vec3 F0;
+	glm::vec3 albedo;
+	
+	unsigned int normalMap;
+	unsigned int roughnessMap;
+	unsigned int metalnessMap;
+	unsigned int albedoMap;
+
+
+	void loadMaterial(string path);
+	Material();
 	~Material();
+
+private:
+	string modelPath;
+	void loadTexture(en_textureType type);
+	unsigned int bindTexture(string path);
 };
 

@@ -98,5 +98,17 @@
     <None Include="assets\code\shader\test.vert" />
     <None Include="assets\code\shader\default.frag" />
     <None Include="assets\code\shader\default.vert" />
+    <None Include="lightPass.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="GPass.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="GPass.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="lightPass.vert">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

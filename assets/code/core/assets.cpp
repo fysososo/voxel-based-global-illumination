@@ -23,7 +23,7 @@ AssetsManager::AssetsManager()
 	cameras["FPS"]->SetAsActive();//激活
 
 	//加载模型
-	models["test"] = make_shared<Model>("assets/model/test/nanosuit.obj");
+	models["cornell-box"] = make_shared<Model>("assets/model/cornell-box/cornell_box.obj");
 
 	//创建程序，并附加shader
 	programs["Voxelization"] = make_shared<Program>();

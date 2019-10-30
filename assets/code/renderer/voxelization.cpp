@@ -17,9 +17,6 @@ void VoxelizationRenderer::Render()
 	//设置MVP
 	SetMVP(prog);
 
-	//绘制模型
-	auto& model = AssetsManager::Instance()->models["test"];
-	model->Draw();
 	
 	//使用默认着色器程序
 	auto& prog2 = AssetsManager::Instance()->programs["Default"];
@@ -27,9 +24,12 @@ void VoxelizationRenderer::Render()
 
 	//设置MVP
 	SetMVP(prog2);
-	
-	//绘制包围盒
-	model->DrawBoundingBox();
+
+	//绘制模型
+	for (auto& model : AssetsManager::Instance()->models) {
+		model.second->Draw();
+	}
+
 
 }
 
@@ -40,7 +40,7 @@ void VoxelizationRenderer::SetMaterialUniforms(Material& material)
 	//绑定漫反射纹理
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(prog->getID(), "texture_diffuse"), 0);
-	glBindTexture(GL_TEXTURE_2D, material.diffuseMaps[0]->ID);
+	glBindTexture(GL_TEXTURE_2D, material.albedoMap);
 }
 
 void VoxelizationRenderer::SetMVP(shared_ptr<Program> prog)
