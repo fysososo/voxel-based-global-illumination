@@ -1,6 +1,5 @@
 #pragma once
 #include <stdafx.h>
-
 class Material
 {
 
@@ -34,6 +33,6 @@ public:
 private:
 	string modelPath;
 	void loadTexture(en_textureType type);
-	unsigned int bindTexture(string path);
+	unsigned int bindTexture(en_textureType type,string path);
 };
 

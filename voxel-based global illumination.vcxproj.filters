@@ -48,10 +48,10 @@
     <ClCompile Include="assets\code\shader\program.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="assets\code\renderer\voxelization.cpp">
+    <ClCompile Include="assets\code\core\assets.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="assets\code\core\assets.cpp">
+    <ClCompile Include="assets\code\renderer\DefferLightRenderer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -89,7 +89,7 @@
     <ClInclude Include="assets\code\shader\program.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="assets\code\renderer\voxelization.h">
+    <ClInclude Include="assets\code\renderer\DefferLightRenderer.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -98,16 +98,16 @@
     <None Include="assets\code\shader\test.vert" />
     <None Include="assets\code\shader\default.frag" />
     <None Include="assets\code\shader\default.vert" />
-    <None Include="lightPass.frag">
+    <None Include="assets\code\shader\GPass.frag">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="GPass.frag">
+    <None Include="assets\code\shader\GPass.vert">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="GPass.vert">
+    <None Include="assets\code\shader\lightPass.frag">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="lightPass.vert">
+    <None Include="assets\code\shader\lightPass.vert">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

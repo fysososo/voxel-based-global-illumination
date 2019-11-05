@@ -2,7 +2,7 @@
 #include "assets.h"
 
 //渲染器类
-#include "../renderer/voxelization.h"
+#include "../renderer/DefferLightRenderer.h"
 
 unique_ptr<AssetsManager>& AssetsManager::Instance()
 {
@@ -23,18 +23,20 @@ AssetsManager::AssetsManager()
 	cameras["FPS"]->SetAsActive();//激活
 
 	//加载模型
-	models["cornell-box"] = make_shared<Model>("assets/model/cornell-box/cornell_box.obj");
+	models["sphere"] = make_shared<Model>("assets/model/sphere/sphere.obj");
 
 	//创建程序，并附加shader
 	programs["Voxelization"] = make_shared<Program>();
 	programs["Voxelization"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/test.vert");
 	programs["Voxelization"]->AttachShader(GL_FRAGMENT_SHADER, "assets/code/shader/test.frag");
-	
-	programs["Default"] = make_shared<Program>();
-	programs["Default"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/default.vert");
-	programs["Default"]->AttachShader(GL_FRAGMENT_SHADER, "assets/code/shader/default.frag");
 
+	programs["GPass"] = make_shared<Program>();
+	programs["GPass"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/GPass.vert");
+	programs["GPass"]->AttachShader(GL_FRAGMENT_SHADER, "assets/code/shader/GPass.frag");
 
+	programs["lightPass"] = make_shared<Program>();
+	programs["lightPass"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/lightPass.vert");
+	programs["lightPass"]->AttachShader(GL_FRAGMENT_SHADER, "assets/code/shader/lightPass.frag");
 	//链接生成所有shader程序
 	for (auto& prog : programs)
 	{
@@ -42,7 +44,8 @@ AssetsManager::AssetsManager()
 	}
 
 	//创建渲染器
-	renderers["Voxelization"] = make_shared<VoxelizationRenderer>();
+	//renderers["Voxelization"] = make_shared<VoxelizationRenderer>();
+	renderers["DefferLight"] = make_shared<DefferLightRender>();
 }
 
 AssetsManager::~AssetsManager()

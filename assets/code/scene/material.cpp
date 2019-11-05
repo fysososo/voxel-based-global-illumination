@@ -88,27 +88,27 @@ void Material::loadTexture(en_textureType type)
 	switch (type)
 	{
 	case Material::en_TEXTURE_NORMAL:
-		fileName = matName + "_NORMAL.png";
-		normalMap = bindTexture(modelPath + "/textures/" + fileName);
+		fileName = matName + "_NORMAL.jpg";
+		normalMap = bindTexture(type, modelPath + "/textures/" + fileName);
 		break;
 	case Material::en_TEXTURE_ROUGHNESS:
-		fileName = matName + "_ROUGHNESS.png";
-		roughnessMap = bindTexture(modelPath + "/textures/" + fileName);
+		fileName = matName + "_ROUGHNESS.jpg";
+		roughnessMap = bindTexture(type, modelPath + "/textures/" + fileName);
 		break;
 	case Material::en_TEXTURE_METANESS:
-		fileName = matName + "_METALNESS.png";
-		metalnessMap = bindTexture(modelPath + "/textures/" + fileName);
+		fileName = matName + "_METALNESS.jpg";
+		metalnessMap = bindTexture(type, modelPath + "/textures/" + fileName);
 		break;
 	case Material::en_TEXTURE_ALBEDO:
-		fileName = matName + "_ALBEDO.png";
-		normalMap = bindTexture(modelPath + "/textures/" + fileName);
+		fileName = matName + "_ALBEDO.jpg";
+		normalMap = bindTexture(type, modelPath + "/textures/" + fileName);
 		break;
 	default:
 		break;
 	}
 }
 
-unsigned int Material::bindTexture(string path)
+unsigned int Material::bindTexture(en_textureType type, string path)
 {
 	int width, height, nrChannels;
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
@@ -122,7 +122,18 @@ unsigned int Material::bindTexture(string path)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// 加载并生成纹理
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	switch (type)
+	{
+	case en_TEXTURE_ALBEDO:
+	case en_TEXTURE_NORMAL:
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		break;
+	case en_TEXTURE_METANESS:
+	case en_TEXTURE_ROUGHNESS:
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, data);
+		break;
+	}
+	
 	glGenerateMipmap(GL_TEXTURE_2D);
 	stbi_image_free(data);
 

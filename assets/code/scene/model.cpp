@@ -7,14 +7,6 @@ Model::Model(string const& path, bool gamma) : gammaCorrection(gamma)
 	loadModel(path);
 }
 
-void Model::Draw()
-{
-	for (unsigned int i = 0; i < meshes.size(); i++)
-	{
-		meshes[i]->Draw();
-	}
-}
-
 void Model::DrawBoundingBox()
 {
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -54,6 +46,9 @@ void Model::loadMeshes()
 		vector<Vertex> vertices;
 		vector<GLuint> indices;
 		shared_ptr<Material> material = make_shared<Material>() ;
+		string meshFileName = string(mesh->mName.C_Str());
+		string meshName = meshFileName.substr(0, meshFileName.find_last_of('_'));
+		string materialName = meshFileName.substr(meshName.length() + 1, meshFileName.length() - meshFileName.find_last_of('_') - 1);
 
 		//遍历获取顶点
 		for (GLuint i = 0; i < mesh->mNumVertices; i++)
@@ -117,7 +112,8 @@ void Model::loadMeshes()
 		}
 
 		//加载材质
-		material->loadMaterial(directory + "/" + scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str() + ".pbr");
+		material->loadMaterial(directory + "/" + materialName + ".pbr");
+
 		materials.push_back(material);
 
 		//该网格载入完毕

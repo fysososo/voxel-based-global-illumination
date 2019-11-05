@@ -26,7 +26,6 @@ Engine::Engine()
 		
 	//载入所有资源
 	AssetsManager::Instance();
-
 	//设置回调函数
 	SetCallback();
 }
@@ -139,6 +138,7 @@ void Engine::processInput(GLFWwindow* window)
 
 void Engine::RenderLoop()
 {
+	AssetsManager::Instance()->renderers["DefferLight"]->SetMaterialUniforms();
 	while (!glfwWindowShouldClose(window))
 	{
 		//计算每帧的间隔时间
@@ -147,8 +147,7 @@ void Engine::RenderLoop()
 		lastFrame = currentFrame;
 
 		processInput(window);//处理键盘输入
-
-		AssetsManager::Instance()->renderers["Voxelization"]->Render();
+		AssetsManager::Instance()->renderers["DefferLight"]->Render();
 
 		glfwSwapBuffers(window);//交换颜色缓冲
 		glfwPollEvents();//检查是否触发事件，并调用已注册的对应的回调函数

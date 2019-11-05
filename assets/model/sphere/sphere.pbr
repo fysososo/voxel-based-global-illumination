@@ -1,0 +1,9 @@
+roughness 0.0
+IOR 1.64
+metalness 0.0
+F0 0.04 0.04 0.04
+albedo 0.0 1.0 0.0
+NormalMap 1
+RoughnessMap 1
+MetalnessMap 1
+AlbedoMap 1

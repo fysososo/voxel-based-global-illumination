@@ -1,5 +1,6 @@
-#include <stdafx.h>
+#include<stdafx.h>
 #include "mesh.h"
+#include "material.h"
 
 Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, shared_ptr<Material> material)
 {
@@ -10,15 +11,11 @@ Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, shared_ptr<Mat
 	setupMesh();//设置网格
 }
 
-void Mesh::Draw()
+int Mesh::Draw()
 {
-	//绑定材质和纹理
-	Renderer::Active()->SetMaterialUniforms(*material);
-
 	//绘制mesh
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
+	return indices.size();	
 }
 
 Mesh::~Mesh()
