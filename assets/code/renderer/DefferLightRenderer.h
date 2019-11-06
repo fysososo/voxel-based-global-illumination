@@ -12,5 +12,6 @@ public:
 	virtual void Render() override;
 	virtual void SetMaterialUniforms() override;
 	GLuint gPosition, gNormal, gColorSpec, gRoughness, gMetalness;
+	GLuint gBuffer;
+	GLuint quadVAO = 0, quadVBO;
 };
-
