@@ -1,21 +1,43 @@
 #version 430 core
+#extension GL_ARB_explicit_uniform_location : enable
 in vec2 TexCoord;
+in vec3 Position;
 out vec4 fragColor;
 
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec4 gAlbedoSpec;
-layout (location = 3) out vec4 gRoughness;
-layout (location = 4) out vec4 gMetalness;
+layout (location = 3) out float gRoughness;
+layout (location = 4) out float gMetalness;
 
-uniform sampler2D NormalMap;
-uniform sampler2D AlbedoMap;
-uniform sampler2D RoughnessMap;
-uniform sampler2D MetalnessMap;
+layout (location = 0) uniform sampler2D NormalMap;
+layout (location = 1) uniform sampler2D AlbedoMap;
+layout (location = 2) uniform sampler2D RoughnessMap;
+layout (location = 3) uniform sampler2D MetalnessMap;
 
 void main(){
 	//将贴图中的信息处理后存入各个GBuffer
 	//……
-	lowp vec4 nor1 =  texture(NormalMap, TexCoord);
-	fragColor = nor1;
+	//法线
+	lowp vec4 normal =  texture(NormalMap, TexCoord);
+	normal = normal*2.0f - 1.0f;
+	vec3 N = normalize(normal.xyz);
+	gNormal = N;
+
+	//位置
+	gPosition = Position;
+
+	//粗糙度
+	lowp vec4 roughness =  texture(RoughnessMap, TexCoord);
+	gRoughness = roughness.r;
+
+	//金属度
+	lowp vec4 metalness =  texture(MetalnessMap, TexCoord);
+	gMetalness = metalness.r;
+
+	//ALBEDO
+	lowp vec4 albedo =  texture(AlbedoMap, TexCoord);
+	gAlbedoSpec = albedo;
+
+	fragColor = vec4(albedo.xyz,1.0f);
 }

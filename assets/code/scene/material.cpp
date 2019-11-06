@@ -101,7 +101,7 @@ void Material::loadTexture(en_textureType type)
 		break;
 	case Material::en_TEXTURE_ALBEDO:
 		fileName = matName + "_ALBEDO.jpg";
-		normalMap = bindTexture(type, modelPath + "/textures/" + fileName);
+		albedoMap = bindTexture(type, modelPath + "/textures/" + fileName);
 		break;
 	default:
 		break;
@@ -130,11 +130,11 @@ unsigned int Material::bindTexture(en_textureType type, string path)
 		break;
 	case en_TEXTURE_METANESS:
 	case en_TEXTURE_ROUGHNESS:
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, width, height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height,0, GL_RED, GL_UNSIGNED_BYTE, data);
 		break;
 	}
-	
 	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	stbi_image_free(data);
 
 	return texture;

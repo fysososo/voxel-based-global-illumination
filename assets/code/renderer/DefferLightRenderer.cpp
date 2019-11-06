@@ -28,64 +28,71 @@ void DefferLightRender::Render()
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);//设置清屏颜色
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//清空颜色缓存和深度缓存
 
-	////申请几何渲染的目标缓存
-	//GLuint gBuffer;
-	//glGenFramebuffers(1, &gBuffer);
-	//glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-	//GLuint gPosition, gNormal, gColorSpec, gRoughness, gMetalness;
+	//申请几何渲染的目标缓存
+	GLuint gBuffer;
+	glGenFramebuffers(1, &gBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 
-	//// - 位置颜色缓冲
-	//glGenTextures(1, &gPosition);
-	//glBindTexture(GL_TEXTURE_2D, gPosition);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 800, 600, 0, GL_RGB, GL_FLOAT, NULL);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+	// - 位置颜色缓冲
+	glGenTextures(1, &gPosition);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 800, 600, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
 
-	//	// - 法线颜色缓冲
-	//glGenTextures(1, &gNormal);
-	//glBindTexture(GL_TEXTURE_2D, gNormal);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 800, 600, 0, GL_RGB, GL_FLOAT, NULL);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+		// - 法线颜色缓冲
+	glGenTextures(1, &gNormal);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 800, 600, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
 
-	//// - 颜色 + 镜面颜色缓冲
-	//glGenTextures(1, &gColorSpec);
-	//glBindTexture(GL_TEXTURE_2D, gColorSpec);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColorSpec, 0);
+	// - 颜色 + 镜面颜色缓冲
+	glGenTextures(1, &gColorSpec);
+	glBindTexture(GL_TEXTURE_2D, gColorSpec);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColorSpec, 0);
 
-	////粗糙度
-	//glGenTextures(1, &gRoughness);
-	//glBindTexture(GL_TEXTURE_2D, gRoughness);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gRoughness, 0);
+	//粗糙度
+	glGenTextures(1, &gRoughness);
+	glBindTexture(GL_TEXTURE_2D, gRoughness);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 800, 600, 0, GL_RED, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gRoughness, 0);
 
-	////金属度
-	//glGenTextures(1, &gMetalness);
-	//glBindTexture(GL_TEXTURE_2D, gMetalness);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gMetalness, 0);
+	//金属度
+	glGenTextures(1, &gMetalness);
+	glBindTexture(GL_TEXTURE_2D, gMetalness);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 800, 600, 0, GL_RED, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gMetalness, 0);
 
-	//// - 告诉OpenGL我们将要使用(帧缓冲的)哪种颜色附件来进行渲染
-	//GLuint attachments[5] = { 
-	//	GL_COLOR_ATTACHMENT0,
-	//	GL_COLOR_ATTACHMENT1, 
-	//	GL_COLOR_ATTACHMENT2,
-	//	GL_COLOR_ATTACHMENT3,
-	//	GL_COLOR_ATTACHMENT4
-	//};
+	// - 告诉OpenGL我们将要使用(帧缓冲的)哪种颜色附件来进行渲染
+	GLuint attachments[5] = { 
+		GL_COLOR_ATTACHMENT0,
+		GL_COLOR_ATTACHMENT1, 
+		GL_COLOR_ATTACHMENT2,
+		GL_COLOR_ATTACHMENT3,
+		GL_COLOR_ATTACHMENT4
+	};
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	for (auto& model : AssetsManager::Instance()->models) {
 		for (auto& mesh : model.second->meshes) {
+			auto& progGPass = AssetsManager::Instance()->programs["GPass"];
+			progGPass->Use();
+			SetMVP(progGPass);
+
+			//设置纹理插槽位置
+			glUniform1i(glGetUniformLocation(progGPass->getID(), "NormalMap"), 0);
+			glUniform1i(glGetUniformLocation(progGPass->getID(), "AlbedoMap"), 1);
+			glUniform1i(glGetUniformLocation(progGPass->getID(), "RoughnessMap"), 2);
+			glUniform1i(glGetUniformLocation(progGPass->getID(), "MetalnessMap"), 3);
 
 			//设置纹理
 			glActiveTexture(GL_TEXTURE0);
@@ -97,18 +104,11 @@ void DefferLightRender::Render()
 			glActiveTexture(GL_TEXTURE3);
 			glBindTexture(GL_TEXTURE_2D, mesh->material->metalnessMap);
 
-			auto& progGPass = AssetsManager::Instance()->programs["GPass"];
-			progGPass->Use();
-			SetMVP(progGPass);
-
-			//设置纹理插槽位置
-			glUniform1i(glGetUniformLocation(progGPass->getID(), "NormalMap"), 0);
-			glUniform1i(glGetUniformLocation(progGPass->getID(), "AlbedoMap"), 1);
-			glUniform1i(glGetUniformLocation(progGPass->getID(), "RoughnessMap"), 2);
-			glUniform1i(glGetUniformLocation(progGPass->getID(), "MetalnessMap"), 3);
-
-
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glDrawElements(GL_TRIANGLES, mesh->Draw(), GL_UNSIGNED_INT, 0);
+			glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+			glDrawBuffers(5, attachments);
+			glBindVertexArray(0);
 		}
 	}
 
