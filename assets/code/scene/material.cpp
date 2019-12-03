@@ -75,48 +75,48 @@ void Material::loadMaterial(string path)
 	matFile.close();
 }
 
-void Material::BindMap(shared_ptr<Program>& prog, GLenum textureSlot, en_textureType mapType)
+void Material::BindMap(shared_ptr<Program> prog, GLenum textureSlot, en_textureType mapType)
 {
 	switch (mapType)
 	{
 	case en_TEXTURE_NORMAL:
 		if (normalMap != -1) {
-			prog->setBool("hasMap[0]", true);
+			prog->setBool("hasNormalMap", true);
 			glActiveTexture(textureSlot);
 			glBindTexture(GL_TEXTURE_2D, normalMap);
 		}
 		else {
-			prog->setBool("hasMap[0]", false);
+			prog->setBool("hasNormalMap", false);
 		}
 		break;
 	case en_TEXTURE_METANESS:
 		if (metalnessMap != -1) {
-			prog->setBool("hasMap[1]", true);
+			prog->setBool("hasMetalnessMap", true);
 			glActiveTexture(textureSlot);
 			glBindTexture(GL_TEXTURE_2D, metalnessMap);
 		}
 		else {
-			prog->setBool("hasMap[1]", false);
+			prog->setBool("hasMetalnessMap", false);
 		}
 		break;	
 	case en_TEXTURE_ALBEDO:
 		if (albedoMap != -1) {
-			prog->setBool("hasMap[2]", true);
+			prog->setBool("hasAlbedoMap", true);
 			glActiveTexture(textureSlot);
 			glBindTexture(GL_TEXTURE_2D, albedoMap);
 		}
 		else {
-			prog->setBool("hasMap[2]", false);
+			prog->setBool("hasAlbedoMap", false);
 		}
 			break;
 	case en_TEXTURE_ROUGHNESS:
 		if (roughnessMap != -1) {
-			prog->setBool("hasMap[3]", true);
+			prog->setBool("hasRoughnessMap", true);
 			glActiveTexture(textureSlot);
 			glBindTexture(GL_TEXTURE_2D, roughnessMap);
 		}
 		else {
-			prog->setBool("hasMap[3]", false);
+			prog->setBool("hasRoughnessMap", false);
 		}
 		break;
 	default:

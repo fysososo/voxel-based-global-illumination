@@ -20,7 +20,7 @@ unique_ptr<AssetsManager>& AssetsManager::Instance()
 AssetsManager::AssetsManager()
 {
 	//加载相机
-	cameras["FPS"] = make_shared<Camera>(glm::vec3(0.0f, 0.0f, 15.0f));
+	cameras["FPS"] = make_shared<Camera>(glm::vec3(0.0f, 0.0f, 4.0f));
 	cameras["FPS"]->SetAsActive();//激活
 
 	//加载灯光
@@ -28,8 +28,8 @@ AssetsManager::AssetsManager()
 	pointLights.push_back(make_shared<Pointlight>(glm::vec3(-10.0f, 10.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), 25.0f));
 
 	//加载模型
-	models["sphere1"] = make_shared<Model>("assets/model/sphere/sphere.obj", glm::vec3(-4.0f,0.0f,0.0f));
-	models["sphere2"] = make_shared<Model>("assets/model/sphere/sphere.obj", glm::vec3(4.0f,0.0f,0.0f));
+	models["sphere1"] = make_shared<Model>("assets/model/sphere/sphere.obj", glm::vec3(-1.5f,0.0f,0.0f));
+	models["sphere2"] = make_shared<Model>("assets/model/sphere/sphere.obj", glm::vec3(1.5f,0.0f,0.0f));
 
 	programs["Voxelization"] = make_shared<Program>();
 	programs["Voxelization"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/voxelization.vert");

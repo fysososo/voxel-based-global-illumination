@@ -29,7 +29,7 @@ public:
 
 
 	void loadMaterial(string path);
-	void BindMap(shared_ptr<Program>& prog, GLenum textureSlot, en_textureType mapType);
+	void BindMap(shared_ptr<Program> prog, GLenum textureSlot, en_textureType mapType);
 	Material();
 	~Material();
 
