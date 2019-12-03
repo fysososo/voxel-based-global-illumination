@@ -4,6 +4,7 @@
 #include "../scene/model.h"
 #include "../shader/program.h"
 #include "../renderer/renderer.h"
+#include "../scene/Pointlight.h"
 #include <map>
 
 
@@ -18,6 +19,7 @@ public:
 	map<string, shared_ptr<Model>> models;//模型
 	map<string, shared_ptr<Program>> programs;//shader程序
 	map<string, shared_ptr<Renderer>> renderers;//渲染器
+	vector<shared_ptr<Pointlight>> pointLights;//渲染器
 
 	//单例模式：删除外部的构造函数
 	AssetsManager(AssetsManager const& r) = delete;

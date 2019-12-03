@@ -7,11 +7,15 @@ class Model
 public:
 	BoundingBox boundingBox;//包围盒
 
+	glm::vec3 position;
+
 	//传入模型文件路径，载入模型
-	Model(string const& path, bool gamma = false);
+	Model(string const& path, glm::vec3 position, bool gamma = false);
 
 	//绘制包围盒
 	void DrawBoundingBox();
+
+	void Draw();
 	
 	vector<shared_ptr<Material>> materials;//所有材质（纹理指针）数据
 	vector<shared_ptr<Mesh>> meshes;//所有网格（顶点、索引、材质指针）数据
@@ -25,7 +29,7 @@ private:
 	GLuint VAO;//包围盒的VAO
 
 	//加载模型
-	void loadModel(string const& path);
+	void loadModel(string const& path, glm::vec3 postion);
 
 	//载入网格
 	void loadMeshes();

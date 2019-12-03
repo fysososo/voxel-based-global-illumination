@@ -54,6 +54,12 @@
     <ClCompile Include="assets\code\renderer\DefferLightRenderer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="assets\code\renderer\voxelization.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="assets\code\scene\Pointlight.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="assets\code\scene\material.h">
@@ -92,6 +98,12 @@
     <ClInclude Include="assets\code\renderer\DefferLightRenderer.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="assets\code\renderer\voxelization.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="assets\code\scene\Pointlight.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\code\shader\test.frag" />
@@ -108,6 +120,33 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="assets\code\shader\lightPass.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="assets\code\shader\drawVoxel.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="assets\code\shader\drawVoxel.geom">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="assets\code\shader\drawVoxel.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="assets\code\shader\voxelization.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="assets\code\shader\voxelization.geom">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="assets\code\shader\voxelization.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="assets\code\shader\whiteLine.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="assets\code\shader\whiteLine.vert">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="AnisoMipmap.comp">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

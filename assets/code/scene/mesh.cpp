@@ -15,6 +15,7 @@ int Mesh::Draw()
 {
 	//ªÊ÷∆mesh
 	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	return indices.size();	
 }
 

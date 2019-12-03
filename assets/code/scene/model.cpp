@@ -2,9 +2,9 @@
 #include "model.h"
 
 
-Model::Model(string const& path, bool gamma) : gammaCorrection(gamma)
+Model::Model(string const& path, glm::vec3 position, bool gamma) : gammaCorrection(gamma)
 {
-	loadModel(path);
+	loadModel(path, position);
 }
 
 void Model::DrawBoundingBox()
@@ -16,12 +16,24 @@ void Model::DrawBoundingBox()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
+void Model::Draw()
+{
+	for (unsigned int i = 0; i < meshes.size(); i++)
+	{
+		meshes[i]->Draw();
+	}
+}
+
 Model::~Model()
 {
 }
 
-void Model::loadModel(string const& path)
+void Model::loadModel(string const& path, glm::vec3 position)
 {
+	cout << "开始加载模型：" << endl;
+	cout << path << endl;
+	cout << "请稍等……" << endl;
+	this->position = position;
 	Assimp::Importer importer;
 	scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -35,6 +47,8 @@ void Model::loadModel(string const& path)
 	SetupBoundingBox();//设置包围盒
 
 	scene = nullptr;
+
+	cout << "模型加载完成！" << endl;
 }
 
 
@@ -126,6 +140,8 @@ void Model::loadMeshes()
 void Model::SetupBoundingBox()
 {
 	//计算包围盒的中点和尺寸
+	boundingBox.MinPoint += position;
+	boundingBox.MaxPoint += position;
 	boundingBox.Center = (boundingBox.MinPoint + boundingBox.MaxPoint) * 0.5f;
 	boundingBox.Size = boundingBox.MaxPoint- boundingBox.MinPoint;
 

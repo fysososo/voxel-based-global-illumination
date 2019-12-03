@@ -6,6 +6,7 @@ GLfloat Engine::lastX = 0.0f;
 GLfloat Engine::lastY = 0.0f;
 GLfloat Engine::deltaTime = 0.0f;
 GLfloat Engine::lastFrame = 0.0f;
+GLint Engine::currentProcessLightIndex = 0;
 
 std::unique_ptr<Engine>& Engine::Instance()
 {
@@ -68,6 +69,8 @@ void Engine::Initialize()
 	{
 		throw 1;
 	}
+
+	currentProcessLightIndex = 0;
 }
 
 void Engine::SetCallback()
@@ -130,6 +133,18 @@ void Engine::processInput(GLFWwindow* window)
 		camera->ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera->ProcessKeyboard(RIGHT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+		currentProcessLightIndex++;
+		if (currentProcessLightIndex >= AssetsManager::Instance()->pointLights.size()) {
+			currentProcessLightIndex = 0;
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.x += 1.0f;
+	}
+	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.x -= 1.0f;
+	}
 }
 
 
@@ -138,7 +153,10 @@ void Engine::processInput(GLFWwindow* window)
 
 void Engine::RenderLoop()
 {
-	AssetsManager::Instance()->renderers["DefferLight"]->SetMaterialUniforms();
+	for (auto& render : AssetsManager::Instance()->renderers) {
+		render.second->SetMaterialUniforms();
+	}
+
 	while (!glfwWindowShouldClose(window))
 	{
 		//计算每帧的间隔时间
@@ -147,6 +165,8 @@ void Engine::RenderLoop()
 		lastFrame = currentFrame;
 
 		processInput(window);//处理键盘输入
+
+		AssetsManager::Instance()->renderers["Voxelization"]->Render();
 		AssetsManager::Instance()->renderers["DefferLight"]->Render();
 
 		glfwSwapBuffers(window);//交换颜色缓冲

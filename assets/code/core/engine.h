@@ -1,5 +1,6 @@
 #pragma once
 #include <stdafx.h>
+#include "../renderer/DefferLightRenderer.h"
 
 class Engine
 {
@@ -22,6 +23,7 @@ public:
 	static void Terminate();
 	~Engine();
 
+
 private:
 	static GLboolean firstMouse;//是否第一次移动鼠标
 	static GLfloat lastX;//鼠标的横坐标
@@ -29,6 +31,7 @@ private:
 	static GLfloat deltaTime;//两帧间隔时间
 	static GLfloat lastFrame;//上一帧的时间
 
+	static GLint currentProcessLightIndex;
 
 	Engine();
 	GLFWwindow* window;//GLFW窗口指针
