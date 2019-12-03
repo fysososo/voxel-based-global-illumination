@@ -1,5 +1,7 @@
 #pragma once
 #include <stdafx.h>
+
+#include<../assets/code/shader/program.h>
 class Material
 {
 
@@ -27,6 +29,7 @@ public:
 
 
 	void loadMaterial(string path);
+	void BindMap(shared_ptr<Program>& prog, GLenum textureSlot, en_textureType mapType);
 	Material();
 	~Material();
 

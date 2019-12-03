@@ -52,14 +52,14 @@ void DefferLightRender::Render()
 		setModelMat(progGPass, model.second);
 		for (auto& mesh : model.second->meshes) {
 			//设置纹理
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, mesh->material->normalMap);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, mesh->material->albedoMap);
-			glActiveTexture(GL_TEXTURE2);
-			glBindTexture(GL_TEXTURE_2D, mesh->material->roughnessMap);
-			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, mesh->material->metalnessMap);
+			mesh->material->BindMap(progGPass, GL_TEXTURE0, Material::en_TEXTURE_NORMAL);
+			mesh->material->BindMap(progGPass, GL_TEXTURE1, Material::en_TEXTURE_ALBEDO);
+			mesh->material->BindMap(progGPass, GL_TEXTURE2, Material::en_TEXTURE_ROUGHNESS);
+			mesh->material->BindMap(progGPass, GL_TEXTURE3, Material::en_TEXTURE_METANESS);
+
+			progGPass->setFloat("metalness", mesh->material->metalness);
+			progGPass->setFloat("roughness", mesh->material->roughness);
+			progGPass->setVec3("albedo", mesh->material->albedo);
 
 			mesh->Draw();
 		}
@@ -184,8 +184,10 @@ void DefferLightRender::SetMaterialUniforms()
 	auto& progLight = AssetsManager::Instance()->programs["lightPass"];
 	progLight->Use();
 
+	//设置材质信息
 	progLight->setFloat("F0", 0.4f);
 	progLight->setFloat("KD", 0.4f);
+	progLight->setFloat("IOR", 0.4f);
 
 	//设置纹理插槽位置
 	glUniform1i(glGetUniformLocation(progLight->getID(), "gPosition"), 0);

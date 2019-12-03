@@ -34,12 +34,18 @@ void Material::loadMaterial(string path)
 			if (hasNormalMap) {
 				loadTexture(en_TEXTURE_NORMAL);
 			}
+			else {
+				normalMap = -1;
+			}
 		}
 		else if (property == "RoughnessMap") {
 			int hasRoughnessMap;
 			matFile >> hasRoughnessMap;
 			if (hasRoughnessMap) {
 				loadTexture(en_TEXTURE_ROUGHNESS);
+			}
+			else {
+				roughnessMap = -1;
 			}
 		}
 		else if (property == "MetalnessMap") {
@@ -48,6 +54,9 @@ void Material::loadMaterial(string path)
 			if (hasMetalnessMap) {
 				loadTexture(en_TEXTURE_METANESS);
 			}
+			else {
+				metalnessMap = -1;
+			}
 		}
 		else if (property == "AlbedoMap") {
 			int hasAlbedoMap;
@@ -55,12 +64,64 @@ void Material::loadMaterial(string path)
 			if (hasAlbedoMap) {
 				loadTexture(en_TEXTURE_ALBEDO);
 			}
+			else {
+				albedoMap = -1;
+			}
 		}
 		else {
 			cout << "Material::loadMaterial::错误的材质文件属性" + property + "！请检查pbr文件！";
 		}
 	}
 	matFile.close();
+}
+
+void Material::BindMap(shared_ptr<Program>& prog, GLenum textureSlot, en_textureType mapType)
+{
+	switch (mapType)
+	{
+	case en_TEXTURE_NORMAL:
+		if (normalMap != -1) {
+			prog->setBool("hasMap[0]", true);
+			glActiveTexture(textureSlot);
+			glBindTexture(GL_TEXTURE_2D, normalMap);
+		}
+		else {
+			prog->setBool("hasMap[0]", false);
+		}
+		break;
+	case en_TEXTURE_METANESS:
+		if (metalnessMap != -1) {
+			prog->setBool("hasMap[1]", true);
+			glActiveTexture(textureSlot);
+			glBindTexture(GL_TEXTURE_2D, metalnessMap);
+		}
+		else {
+			prog->setBool("hasMap[1]", false);
+		}
+		break;	
+	case en_TEXTURE_ALBEDO:
+		if (albedoMap != -1) {
+			prog->setBool("hasMap[2]", true);
+			glActiveTexture(textureSlot);
+			glBindTexture(GL_TEXTURE_2D, albedoMap);
+		}
+		else {
+			prog->setBool("hasMap[2]", false);
+		}
+			break;
+	case en_TEXTURE_ROUGHNESS:
+		if (roughnessMap != -1) {
+			prog->setBool("hasMap[3]", true);
+			glActiveTexture(textureSlot);
+			glBindTexture(GL_TEXTURE_2D, roughnessMap);
+		}
+		else {
+			prog->setBool("hasMap[3]", false);
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 Material::Material()
