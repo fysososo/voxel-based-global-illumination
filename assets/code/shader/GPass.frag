@@ -35,7 +35,7 @@ void main(){
 		gNormal = N;
 	}
 	else{
-		gNormal = normalize(TBN*TBN[2]);
+		gNormal = normalize(TBN[2]);
 	}
 
 	//Œª÷√

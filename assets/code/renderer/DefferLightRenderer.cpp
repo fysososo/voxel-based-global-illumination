@@ -26,6 +26,7 @@ void DefferLightRender::setModelMat(shared_ptr<Program> prog, shared_ptr<Model> 
 
 void DefferLightRender::Render()
 {
+
 	SetAsActive();
 
 	GLint width, height;
@@ -33,6 +34,7 @@ void DefferLightRender::Render()
 	glViewport(0, 0, width, height);
 
 	glEnable(GL_DEPTH_TEST);
+	//glDisable(GL_CULL_FACE);
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);//…Ë÷√«Â∆¡—’…´
 	glClearDepth(1.0f);

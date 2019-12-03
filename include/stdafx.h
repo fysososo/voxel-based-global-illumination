@@ -1,8 +1,8 @@
 #pragma once
+#include <windows.h>
 //OpenGL
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
 //สýัง
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
