@@ -109,7 +109,7 @@ void DefferLightRender::Render()
 	glBindTexture(GL_TEXTURE_3D, voxelRender.albedo);
 	for (int i = 0; i < 6; i++) {
 		glActiveTexture(GL_TEXTURE8+i);
-		glBindTexture(GL_TEXTURE_3D, voxelRender.radianceMipmap[i]);
+		glBindTexture(GL_TEXTURE_3D, voxelRender.voxelAnisoMipmap[i]);
 	}
 
 	//¹âÕÕäÖÈ¾

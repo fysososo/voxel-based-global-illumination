@@ -53,6 +53,13 @@ AssetsManager::AssetsManager()
 	programs["lightPass"] = make_shared<Program>();
 	programs["lightPass"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/lightPass.vert");
 	programs["lightPass"]->AttachShader(GL_FRAGMENT_SHADER, "assets/code/shader/lightPass.frag");
+	
+	programs["anisoMipmapFirst"] = make_shared<Program>();
+	programs["anisoMipmapFirst"]->AttachShader(GL_COMPUTE_SHADER, "assets/code/shader/anisoMipmapFirst.comp");
+
+	programs["anisoMipmapOthers"] = make_shared<Program>();
+	programs["anisoMipmapOthers"]->AttachShader(GL_COMPUTE_SHADER, "assets/code/shader/anisoMipmapOthers.comp");
+
 	//链接生成所有shader程序
 	for (auto& prog : programs)
 	{

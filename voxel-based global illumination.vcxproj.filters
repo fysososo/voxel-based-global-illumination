@@ -146,11 +146,5 @@
     <None Include="assets\code\shader\whiteLine.vert">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="assets\code\shader\AnisoMipmap.comp">
-      <Filter>资源文件</Filter>
-    </None>
-    <None Include="assets\code\shader\AnisoMipmapVolume.comp">
-      <Filter>资源文件</Filter>
-    </None>
   </ItemGroup>
 </Project>

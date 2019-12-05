@@ -40,6 +40,10 @@ void VoxelizationRenderer::Render()
 		}
 	}
 
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+	GenerateMipmapFirst(albedo);
+	GenerateMipmapOthers();
 
 	//开启通道写入
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -143,8 +147,83 @@ void VoxelizationRenderer::Set3DTexture()
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8,
 		dimension, dimension, dimension,
 		0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	
+	//创建6个方向的mipmap纹理
+	for (int i = 0; i < 6; i++)
+	{
+		glGenTextures(1, &voxelAnisoMipmap[i]);
+		glBindTexture(GL_TEXTURE_3D, voxelAnisoMipmap[i]);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8,
+			dimension / 2, dimension / 2, dimension / 2,
+			0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+		glGenerateMipmap(GL_TEXTURE_3D);
+	}
+
 }
 
+void VoxelizationRenderer::GenerateMipmapOthers()
+{
+	//使用mipmapOthers计算着色器
+	auto& prog = AssetsManager::Instance()->programs["anisoMipmapOthers"];
+	prog->Use();
+
+	GLint mipDimension = dimension / 4;
+	GLint mipLevel = 0;
+
+	while (mipDimension >= 1)
+	{
+		prog->setInt("mipDimension", mipDimension);
+		prog->setInt("mipLevel", mipLevel);
+
+		for (auto i = 0; i < voxelAnisoMipmap.size(); ++i)
+		{
+			glActiveTexture(GL_TEXTURE0 + i);
+			glBindTexture(GL_TEXTURE_3D, voxelAnisoMipmap[i]);
+			glBindImageTexture(i, voxelAnisoMipmap[i], mipLevel + 1, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
+		}
+
+		auto workGroups = static_cast<unsigned>(glm::ceil(mipDimension / 8.0f));
+		glDispatchCompute(workGroups, workGroups, workGroups);
+
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+
+		mipLevel++;
+		mipDimension /= 2;
+	}
+}
+
+
+void VoxelizationRenderer::GenerateMipmapFirst(GLuint baseTexture)
+{
+	//使用mipmapFirst计算着色器
+	auto& prog = AssetsManager::Instance()->programs["anisoMipmapFirst"];
+	prog->Use();
+
+	GLint halfDimension = dimension / 2;
+	prog->setInt("mipDimension", halfDimension);
+
+	//绑定六张纹理，用以接收第一级mipmap
+	for (int i = 0; i < voxelAnisoMipmap.size(); ++i)
+	{
+		glBindImageTexture(i, voxelAnisoMipmap[i], 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
+	}
+	//绑定原始3D体素纹理
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_3D, baseTexture);
+
+	//开始计算，得到六张方向不同的第一级mipmap
+	auto workGroups = static_cast<unsigned int>(ceil(halfDimension / 8));
+	glDispatchCompute(workGroups, workGroups, workGroups);
+
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+}
 
 void VoxelizationRenderer::DrawVoxel(shared_ptr<Model> model)
 {

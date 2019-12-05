@@ -1,4 +1,5 @@
 #pragma once
+#include<array>
 #include "renderer.h"
 #include "../scene/material.h"
 
@@ -14,13 +15,15 @@ private:
 	void DrawVoxel(shared_ptr<Model> model);//绘制体素
 	void setModelMat(shared_ptr<Program> prog, shared_ptr<Model> model);
 	void drawSceneBoundingBox();
+	void GenerateMipmapOthers();
+	void GenerateMipmapFirst(GLuint baseTexture);
 
 public:
 	virtual void Render() override;
 	virtual void SetMaterialUniforms() override;
 	VoxelizationRenderer();
 	GLuint albedo;//储存体素颜色的3D纹理
-	GLuint radianceMipmap[6];
+	std::array<GLuint, 6> voxelAnisoMipmap;
 	GLfloat gridSize;//网格尺寸（=视景体最长边）
 	GLuint dimension;//一排体素的数量
 	GLfloat voxelSize;//单位体素尺寸
