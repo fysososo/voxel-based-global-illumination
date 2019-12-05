@@ -97,15 +97,15 @@ void main(){
 		float attenuation = 1.0 / (distance * distance);
 		vec3 radiance = pointLight[i].color * attenuation * pointLight[i].intensity; 
 		vec3 F = mix(vec3(F0), albedo.rgb, metalness);
-		fragColor = vec4(max(0.0f, conetraceShadow(pos, L, 0.03f, volumeDimension*voxelScale)));
-//		fragColor += vec4
-//		(
-//			BRDF(albedo.rgb, N, L, H, V, roughness.r, metalness, F, albedo.a)
-//			*max(dot(N, L),0.0f)
-//			*radiance
-//			*max(0.0f, conetraceShadow(pos, L, 0.03f, volumeDimension*voxelScale))
-//			,1.0f
-//		);
+		//fragColor = vec4(max(0.0f, conetraceShadow(pos, L, 0.03f, volumeDimension*voxelScale)));
+		fragColor += vec4
+		(
+			BRDF(albedo.rgb, N, L, H, V, roughness.r, metalness, F, albedo.a)
+			*max(dot(N, L),0.0f)
+			*radiance
+			*max(0.0f, conetraceShadow(pos, L, 0.03f, volumeDimension*voxelScale))
+			,1.0f
+		);
 	}
 }
 

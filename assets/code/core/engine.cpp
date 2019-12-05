@@ -153,9 +153,6 @@ void Engine::processInput(GLFWwindow* window)
 
 void Engine::RenderLoop()
 {
-	for (auto& render : AssetsManager::Instance()->renderers) {
-		render.second->SetMaterialUniforms();
-	}
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -166,7 +163,9 @@ void Engine::RenderLoop()
 
 		processInput(window);//处理键盘输入
 
+		AssetsManager::Instance()->renderers["Voxelization"]->SetMaterialUniforms();
 		AssetsManager::Instance()->renderers["Voxelization"]->Render();
+		AssetsManager::Instance()->renderers["DefferLight"]->SetMaterialUniforms();
 		AssetsManager::Instance()->renderers["DefferLight"]->Render();
 
 		glfwSwapBuffers(window);//交换颜色缓冲
