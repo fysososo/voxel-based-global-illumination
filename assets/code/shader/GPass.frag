@@ -4,11 +4,11 @@ in vec2 TexCoord;
 in vec3 Position;
 in mat3 TBN;
 
+
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
-layout (location = 2) out vec3 gAlbedoSpec;
-layout (location = 3) out float gRoughness;
-layout (location = 4) out float gMetalness;
+layout (location = 2) out vec4 gAlbedoSpec;
+layout (location = 3) out vec4 gRoughness;
 
 layout (location = 0) uniform sampler2D NormalMap;
 layout (location = 1) uniform sampler2D AlbedoMap;
@@ -23,6 +23,9 @@ uniform bool hasMetalnessMap;
 uniform float metalness;
 uniform float roughness;
 uniform vec3 albedo;
+uniform float F0;
+uniform float IOR;
+uniform float KD;
 
 void main(){
 	//将贴图中的信息处理后存入各个GBuffer
@@ -44,27 +47,30 @@ void main(){
 	//ALBEDO
 	if(hasAlbedoMap){
 		lowp vec4 _albedo =  texture(AlbedoMap, TexCoord);
-		gAlbedoSpec = _albedo.xyz;
+		gAlbedoSpec.rgb = _albedo.xyz;
 	}
 	else{
-		gAlbedoSpec = albedo;
+		gAlbedoSpec.rgb = albedo;
 	}
-	//粗糙度
-	if(hasRoughnessMap){
-		lowp vec4 _roughness =  texture(RoughnessMap, TexCoord);
-		gRoughness = _roughness.r;
-	}
-	else{
-		gRoughness = roughness;
-	}
-
+	
 	//金属度
 	if(hasMetalnessMap){
 		lowp vec4 _metalness = texture(MetalnessMap, TexCoord);
-		gMetalness = _metalness.r;
+		gRoughness.g = _metalness.r;
 	}
 	else{
-		gMetalness = metalness;
+		gRoughness.g = metalness;
 	}
 
+	//粗糙度
+	if(hasRoughnessMap){
+		lowp vec4 _roughness =  texture(RoughnessMap, TexCoord);
+		gRoughness.r = _roughness.r;
+	}
+	else{
+		gRoughness.r = roughness;
+	}
+	gRoughness.b = F0;
+	gRoughness.a = IOR;
+	gAlbedoSpec.a = KD;
 }

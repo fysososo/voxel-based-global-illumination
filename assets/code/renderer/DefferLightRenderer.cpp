@@ -59,10 +59,13 @@ void DefferLightRender::Render()
 			mesh->material->BindMap(progGPass, GL_TEXTURE2, Material::en_TEXTURE_ROUGHNESS);
 			mesh->material->BindMap(progGPass, GL_TEXTURE3, Material::en_TEXTURE_METANESS);
 
+			//设置材质信息
 			progGPass->setFloat("metalness", mesh->material->metalness);
 			progGPass->setFloat("roughness", mesh->material->roughness);
 			progGPass->setVec3("albedo", mesh->material->albedo);
-
+			progGPass->setFloat("F0", mesh->material->F0.x);
+			progGPass->setFloat("KD", 0.4f);
+			progGPass->setFloat("IOR", mesh->material->IOR);
 			mesh->Draw();
 		}
 	}
@@ -104,6 +107,10 @@ void DefferLightRender::Render()
 	glBindTexture(GL_TEXTURE_3D, voxelRender.albedo);
 	glActiveTexture(GL_TEXTURE7);
 	glBindTexture(GL_TEXTURE_3D, voxelRender.albedo);
+	for (int i = 0; i < 6; i++) {
+		glActiveTexture(GL_TEXTURE8+i);
+		glBindTexture(GL_TEXTURE_3D, voxelRender.radianceMipmap[i]);
+	}
 
 	//光照渲染
 	glBindVertexArray(quadVAO);
@@ -146,50 +153,36 @@ void DefferLightRender::SetMaterialUniforms()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
 
-	// - 颜色 + 镜面颜色缓冲
+	// - 颜色 + 镜面颜色KD
 	glGenTextures(1, &gColorSpec);
 	glBindTexture(GL_TEXTURE_2D, gColorSpec);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 800, 600, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColorSpec, 0);
 
-	//粗糙度
+	//粗糙度+金属度+F0+IOR
 	glGenTextures(1, &gRoughness);
 	glBindTexture(GL_TEXTURE_2D, gRoughness);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 800, 600, 0, GL_RED, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gRoughness, 0);
 
-	//金属度
-	glGenTextures(1, &gMetalness);
-	glBindTexture(GL_TEXTURE_2D, gMetalness);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, 800, 600, 0, GL_RED, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gMetalness, 0);
-
 	// - 告诉OpenGL我们将要使用(帧缓冲的)哪种颜色附件来进行渲染
-	GLuint attachments[5] = {
+	GLuint attachments[4] = {
 		GL_COLOR_ATTACHMENT0,
 		GL_COLOR_ATTACHMENT1,
 		GL_COLOR_ATTACHMENT2,
-		GL_COLOR_ATTACHMENT3,
-		GL_COLOR_ATTACHMENT4
+		GL_COLOR_ATTACHMENT3
 	};
-	glDrawBuffers(5, attachments);
+	glDrawBuffers(4, attachments);
 
 #pragma endregion
 
 #pragma region 设置延迟渲染的光照阶段的uniform 属性
 	auto& progLight = AssetsManager::Instance()->programs["lightPass"];
 	progLight->Use();
-
-	//设置材质信息
-	progLight->setFloat("F0", 0.4f);
-	progLight->setFloat("KD", 0.4f);
-	progLight->setFloat("IOR", 0.4f);
 
 	//设置纹理插槽位置
 	glUniform1i(glGetUniformLocation(progLight->getID(), "gPosition"), 0);
@@ -209,6 +202,9 @@ void DefferLightRender::SetMaterialUniforms()
 	glUniform1i(glGetUniformLocation(progLight->getID(), "voxelRadiance"), 5);
 	glUniform1i(glGetUniformLocation(progLight->getID(), "voxelNormal"), 6);
 	glUniform1i(glGetUniformLocation(progLight->getID(), "voxelIOR"), 7);
+	for (int i = 0; i < 6; i++) {
+		glUniform1i(glGetUniformLocation(progLight->getID(), ("voxelTexMipmap[" + to_string(i)+ "]").c_str()), 8+i);
+	}
 
 	if (quadVAO == 0)
 	{

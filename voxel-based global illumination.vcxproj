@@ -171,7 +171,8 @@
     <ClInclude Include="include\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="AnisoMipmap.comp" />
+    <None Include="assets\code\shader\AnisoMipmap.comp" />
+    <None Include="assets\code\shader\AnisoMipmapVolume.comp" />
     <None Include="assets\code\shader\default.frag" />
     <None Include="assets\code\shader\default.vert" />
     <None Include="assets\code\shader\drawVoxel.frag" />

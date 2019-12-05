@@ -40,9 +40,9 @@ void VoxelizationRenderer::Render()
 		}
 	}
 
-	glBindTexture(GL_TEXTURE_3D, albedo);
-	glGenerateTextureMipmap(albedo);
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);//开启通道写入
+
+	//开启通道写入
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
@@ -159,6 +159,7 @@ void VoxelizationRenderer::DrawVoxel(shared_ptr<Model> model)
 	prog->setUnsignedInt("dimension", dimension);
 	prog->setFloat("voxelSize", voxelSize);
 	prog->setVec3("boxMin", sceneBoundingBox.MinPoint);
+	prog->setFloat("coneShadowTolerance", 0.1f);
 
 	//绑定纹理
 	glBindImageTexture(0, albedo, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);

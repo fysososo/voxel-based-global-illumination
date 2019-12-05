@@ -20,6 +20,7 @@ public:
 	virtual void SetMaterialUniforms() override;
 	VoxelizationRenderer();
 	GLuint albedo;//储存体素颜色的3D纹理
+	GLuint radianceMipmap[6];
 	GLfloat gridSize;//网格尺寸（=视景体最长边）
 	GLuint dimension;//一排体素的数量
 	GLfloat voxelSize;//单位体素尺寸

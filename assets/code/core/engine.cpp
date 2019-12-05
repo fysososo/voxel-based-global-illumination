@@ -140,10 +140,10 @@ void Engine::processInput(GLFWwindow* window)
 		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
-		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.x += 1.0f;
+		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.x += 0.1f;
 	}
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.x -= 1.0f;
+		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.x -= 0.1f;
 	}
 }
 
