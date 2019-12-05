@@ -107,6 +107,14 @@ void DefferLightRender::Render()
 	glBindTexture(GL_TEXTURE_3D, voxelRender.albedo);
 	glActiveTexture(GL_TEXTURE7);
 	glBindTexture(GL_TEXTURE_3D, voxelRender.albedo);
+
+	//设置体素相关信息
+	progLight->setFloat("voxelScale", voxelRender.voxelSize);
+	progLight->setInt("volumeDimension", voxelRender.dimension);
+	progLight->setVec3("worldMaxPoint", voxelRender.sceneBoundingBox.MaxPoint);
+	progLight->setVec3("worldMinPoint", voxelRender.sceneBoundingBox.MinPoint);
+
+
 	for (int i = 0; i < 6; i++) {
 		glActiveTexture(GL_TEXTURE8+i);
 		glBindTexture(GL_TEXTURE_3D, voxelRender.voxelAnisoMipmap[i]);
@@ -190,13 +198,6 @@ void DefferLightRender::SetMaterialUniforms()
 	glUniform1i(glGetUniformLocation(progLight->getID(), "gRoughness"), 2);
 	glUniform1i(glGetUniformLocation(progLight->getID(), "gMetalness"), 3);
 	glUniform1i(glGetUniformLocation(progLight->getID(), "gAbledo"), 4);
-
-	//设置体素相关信息
-	auto& voxelRender = *static_cast<VoxelizationRenderer*>(AssetsManager::Instance()->renderers["Voxelization"].get());
-	progLight->setFloat("voxelScale", voxelRender.voxelSize);
-	progLight->setInt("volumeDimension", voxelRender.dimension);
-	progLight->setVec3("worldMaxPoint", voxelRender.sceneBoundingBox.MaxPoint);
-	progLight->setVec3("worldMinPoint", voxelRender.sceneBoundingBox.MinPoint);
 
 	//体素数据
 	glUniform1i(glGetUniformLocation(progLight->getID(), "voxelRadiance"), 5);
