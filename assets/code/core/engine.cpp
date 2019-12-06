@@ -140,10 +140,13 @@ void Engine::processInput(GLFWwindow* window)
 		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
-		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.x += 0.1f;
+		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.z += 0.1f;
+		//AssetsManager::Instance()->models["lightBox"+to_string(currentProcessLightIndex)]->position.x += 0.1f;
+	
 	}
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.x -= 0.1f;
+		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.z -= 0.1f;
+		//AssetsManager::Instance()->models["lightBox" + to_string(currentProcessLightIndex)]->position.x -= 0.1f;
 	}
 }
 
@@ -156,7 +159,6 @@ void Engine::RenderLoop()
 	for (auto& render : AssetsManager::Instance()->renderers) {
 		render.second->SetMaterialUniforms();
 	}
-
 	while (!glfwWindowShouldClose(window))
 	{
 		//计算每帧的间隔时间

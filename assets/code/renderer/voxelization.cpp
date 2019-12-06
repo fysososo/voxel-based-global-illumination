@@ -16,6 +16,9 @@ void VoxelizationRenderer::Render()
 	//清空并绑定纹理
 	static GLfloat zero[] = { 0, 0, 0, 0 };
 	glClearTexImage(albedo, 0, GL_RGBA, GL_FLOAT, zero);
+	for (int i = 0; i < 6; i++) {
+		glClearTexImage(voxelAnisoMipmap[i], 0, GL_RGBA, GL_FLOAT, zero);
+	}
 	glBindImageTexture(0, albedo, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
 
 	//使用体素化着色器程序

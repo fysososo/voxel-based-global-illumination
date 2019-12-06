@@ -16,6 +16,7 @@ uniform int lightCount;
 //参数
 uniform vec3 viewPos;
 uniform float coneShadowTolerance;
+uniform float samplingFactor = 0.5f;
 
 //延迟渲染几何阶段结果
 uniform sampler2D gPosition;
@@ -97,13 +98,15 @@ void main(){
 		float attenuation = 1.0 / (distance * distance);
 		vec3 radiance = pointLight[i].color * attenuation * pointLight[i].intensity; 
 		vec3 F = mix(vec3(F0), albedo.rgb, metalness);
+		float dis = length(pointLight[i].position - pos);
 		//fragColor = vec4(max(0.0f, conetraceShadow(pos, L, 0.03f, volumeDimension*voxelScale)));
 		fragColor += vec4
 		(
 			BRDF(albedo.rgb, N, L, H, V, roughness.r, metalness, F, albedo.a)
 			*max(dot(N, L),0.0f)
 			*radiance
-			*max(0.0f, conetraceShadow(pos, L, 0.03f, volumeDimension*voxelScale))
+			*max(0.0f, conetraceShadow(pos, L, 0.02f, dis))
+			*(1.0f/(0.01f+0.05f*dis+0.1* dis*dis))
 			,1.0f
 		);
 	}
@@ -192,13 +195,14 @@ float conetraceShadow(vec3 position, vec3 direction, float aperture, float maxTr
     visibleFace.z = (direction.z < 0.0) ? 4 : 5;
 	//各向异性采样权值
 	vec3 weight = direction * direction;
-	//避免自碰撞
-    float dst = voxelScale;
+	//避免自碰撞 
+	float worldVoxelScale = 2.0f * voxelScale;
+    float dst = worldVoxelScale;
     vec3 startPosition = position + direction * dst;
 
 	//可视度和遮蔽值
     float visibility = 0.0f;
-    float k = exp2(7.0f * coneShadowTolerance);
+    float k = exp2(0.7f);
 
     //是否与场景相交
     float enter = 0.0; float leave = 0.0;
@@ -210,15 +214,20 @@ float conetraceShadow(vec3 position, vec3 direction, float aperture, float maxTr
     while(visibility < 1.0f && dst <= maxTracingDistance)
     {
         vec3 conePosition = startPosition + direction * dst;
-        float diameter = 2.0f * aperture * dst;
-        float mipLevel = log2(diameter / voxelScale);
+        float diameter = 2.0f * tan(aperture) * dst;
+        float mipLevel = log2(diameter / worldVoxelScale);
         //世界坐标转换为3d体素坐标
         vec3 coord = WorldToVoxel(conePosition);
         //各向异性采样
         vec4 anisoSample = AnistropicSample(coord, weight, visibleFace, mipLevel); 
+        //vec4 anisoSample = texture(voxelRadiance, coord); 
 		//step
-        visibility += (1.0f - visibility) * k;
-        dst += diameter;
+		//visibility += (1.0f - visibility)*anisoSample.a * k;
+//		if(anisoSample.a > 0){
+//			visibility += (1.0f - visibility) * k;
+//		}
+        visibility += (1.0f - visibility) * anisoSample.a * k;
+        dst += diameter * 0.5f;
     }
 
     return 1.0f - visibility;

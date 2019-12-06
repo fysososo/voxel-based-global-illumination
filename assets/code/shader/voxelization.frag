@@ -47,6 +47,7 @@ void imageAtomicRGBA8Avg(layout(r32ui) volatile coherent uimage3D grid, ivec3 co
 		rval.rgb = (rval.rgb * rval.a); // Denormalize
 		vec4 curValF = rval + value;    // Add
 		curValF.rgb /= curValF.a;       // Renormalize
+		curValF.a = 255;
 		newVal = convVec4ToRGBA8(curValF);
 	}
 }
@@ -63,7 +64,7 @@ void main()
 	int x = int((FragPos.x - boxMin.x)/voxelSize);
 	int y = int((FragPos.y - boxMin.y)/voxelSize);
 	int z = int((FragPos.z - boxMin.z)/voxelSize);
-	vec4 albedo = texture(texture_diffuse, TexCoord);
+	vec4 albedo = vec4(texture(texture_diffuse, TexCoord).xyz, 1.0f);
 
 	imageAtomicRGBA8Avg(texture_albedo, ivec3(x,y,z), albedo);
 }
