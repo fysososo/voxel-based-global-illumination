@@ -9,7 +9,10 @@ out vec4 fragColor;
 
 layout(binding = 0, r32ui)  uniform volatile coherent uimage3D texture_albedo;
 
-uniform sampler2D texture_diffuse;
+uniform bool hasAlbedoMap;
+uniform sampler2D AlbedoMap;
+uniform vec3 albedo;
+
 uniform float voxelSize;
 uniform vec3 boxMin;
 
@@ -33,22 +36,30 @@ uint convVec4ToRGBA8(vec4 val)
 
 void imageAtomicRGBA8Avg(layout(r32ui) volatile coherent uimage3D grid, ivec3 coords, vec4 value)
 {
-	value.rgb *= 255.0;
+	value *= 255.0;
 	uint newVal = convVec4ToRGBA8(value);
 	uint prevStoredVal = 0;
 	uint curStoredVal;
+	uint numIterations = 0;
 
 	//若未存值，则存值，进入不了循环
 	//若已有值，则不存值，并进入循环；两个值在循环中按照alpha值混合后，存值，离开循环
-	while((curStoredVal = imageAtomicCompSwap(grid, coords, prevStoredVal, newVal)) != prevStoredVal)
+	while((curStoredVal = imageAtomicCompSwap(grid, coords, prevStoredVal, newVal)) 
+			!= prevStoredVal
+			&& numIterations < 255
+			)
 	{
 		prevStoredVal = curStoredVal;
 		vec4 rval = convRGBA8ToVec4(curStoredVal);
 		rval.rgb = (rval.rgb * rval.a); // Denormalize
 		vec4 curValF = rval + value;    // Add
 		curValF.rgb /= curValF.a;       // Renormalize
-		curValF.a = 255;
+		if(curValF.a > 255){
+			curValF.a = 255;
+		}
 		newVal = convVec4ToRGBA8(curValF);
+		++numIterations;
+
 	}
 }
 
@@ -64,7 +75,13 @@ void main()
 	int x = int((FragPos.x - boxMin.x)/voxelSize);
 	int y = int((FragPos.y - boxMin.y)/voxelSize);
 	int z = int((FragPos.z - boxMin.z)/voxelSize);
-	vec4 albedo = vec4(texture(texture_diffuse, TexCoord).xyz, 1.0f);
+	vec4 albedoData;
+	if(hasAlbedoMap){
+		albedoData = vec4(texture(AlbedoMap, TexCoord).xyz, 1.0f);
+	}
+	else{
+		albedoData = vec4(albedo, 1.0f);
+	}
 
-	imageAtomicRGBA8Avg(texture_albedo, ivec3(x,y,z), albedo);
+	imageAtomicRGBA8Avg(texture_albedo, ivec3(x,y,z), albedoData);
 }

@@ -36,9 +36,9 @@ void VoxelizationRenderer::Render()
 		setModelMat(prog, model.second);
 		for (auto& mesh : model.second->meshes) {
 			//绑定漫反射纹理
-			glActiveTexture(GL_TEXTURE0);
-			glUniform1i(glGetUniformLocation(prog->getID(), "texture_diffuse"), 0);
-			glBindTexture(GL_TEXTURE_2D, mesh->material->albedoMap);
+			glUniform1i(glGetUniformLocation(prog->getID(), "AlbedoMap"), 0);
+			mesh->material->BindMap(prog, GL_TEXTURE0, Material::en_TEXTURE_ALBEDO);
+			prog->setVec3("albedo", mesh->material->albedo);
 			mesh->Draw();
 		}
 	}
@@ -83,7 +83,7 @@ void VoxelizationRenderer::SetMaterialUniforms()
 VoxelizationRenderer::VoxelizationRenderer()
 {
 	gridSize = 0;//网格尺寸（=视景体最长边）
-	dimension = 128;//一排体素的数量
+	dimension = 256;//一排体素的数量
 	voxelSize = 0;//单位体素尺寸
 	glGenVertexArrays(1, &VAO_drawVoxel);
 	Set3DTexture();
