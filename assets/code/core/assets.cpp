@@ -58,6 +58,12 @@ AssetsManager::AssetsManager()
 
 	programs["anisoMipmapOthers"] = make_shared<Program>();
 	programs["anisoMipmapOthers"]->AttachShader(GL_COMPUTE_SHADER, "assets/code/shader/anisoMipmapOthers.comp");
+	
+	programs["injectRadiance"] = make_shared<Program>();
+	programs["injectRadiance"]->AttachShader(GL_COMPUTE_SHADER, "assets/code/shader/inject_radiance.comp");
+	
+	programs["injectPropagation"] = make_shared<Program>();
+	programs["injectPropagation"]->AttachShader(GL_COMPUTE_SHADER, "assets/code/shader/inject_propagation.comp");
 
 	//链接生成所有shader程序
 	for (auto& prog : programs)

@@ -180,6 +180,8 @@
     <None Include="assets\code\shader\drawVoxel.vert" />
     <None Include="assets\code\shader\GPass.frag" />
     <None Include="assets\code\shader\GPass.vert" />
+    <None Include="assets\code\shader\inject_propagation.comp" />
+    <None Include="assets\code\shader\inject_radiance.comp" />
     <None Include="assets\code\shader\lightPass.frag" />
     <None Include="assets\code\shader\lightPass.vert" />
     <None Include="assets\code\shader\test.frag" />

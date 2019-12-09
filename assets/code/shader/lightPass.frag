@@ -132,7 +132,7 @@ void main(){
 			BRDF(albedo.rgb, N, L, H, V, roughness.r, metalness, F, albedo.a)
 			*max(dot(N, L),0.0f)
 			*radiance
-			//*max(0.0f, conetraceShadow(pos, L, 0.01f, dis))
+			*max(0.0f, conetraceShadow(pos, L, 0.01f, dis))
 			*(1.0f/(0.01f+0.05f*dis+0.1* dis*dis))
 			,1.0f
 		);
@@ -184,9 +184,10 @@ float D(vec3 N, vec3 H, float Roughness){
 	return R_2/(PI * denominator * denominator);
 }
 
-
-vec3 conetrace(vec3 position, vec3 direction, vec3 aperture){
-	return vec3(1.0f); 
+vec3 BRDF(vec3 albedo, vec3 N,vec3 L,vec3 H, vec3 V, float roughness, float metalness, vec3 F, float KD){
+	vec3 diff = albedo/PI;
+	vec3 spec = f_Specular(N, L, H, V, roughness, metalness, F);
+	return (KD*diff+(1-KD)*(1-metalness)*spec);
 }
 
 bool IsIntersectWithWorldAABB(vec3 o, vec3 d, out float leave, out float enter){
@@ -199,12 +200,6 @@ bool IsIntersectWithWorldAABB(vec3 o, vec3 d, out float leave, out float enter){
 	leave = min(vMax.x, min(vMax.y, vMax.z));
 	enter = max (max (vMin.x, 0.0), max (vMin.y, vMin.z));
 	return leave > enter;
-}
-
-vec3 BRDF(vec3 albedo, vec3 N,vec3 L,vec3 H, vec3 V, float roughness, float metalness, vec3 F, float KD){
-	vec3 diff = albedo/PI;
-	vec3 spec = f_Specular(N, L, H, V, roughness, metalness, F);
-	return (KD*diff+(1-KD)*(1-metalness)*spec);
 }
 
 vec3 WorldToVoxel(vec3 position){

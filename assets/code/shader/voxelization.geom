@@ -5,7 +5,7 @@ layout (triangle_strip, max_vertices = 3) out;
 in Vertex
 {
 	vec2 texCoord;
-	//vec3 normal;
+	mat3 TBN;
 } In[3];
 
 
@@ -13,6 +13,7 @@ out vec3 FragPos;
 out vec2 TexCoord;
 out vec3 ClipPos;
 out vec4 BoundingBox;
+out mat3 TBN;
 
 uniform mat4 viewProject[3];
 uniform mat4 viewProjectI[3];
@@ -141,6 +142,7 @@ void main() {
 		gl_Position = clipPos[i];
 		ClipPos = clipPos[i].xyz;
 		TexCoord = In[i].texCoord;
+		TBN = In[i].TBN;
 		EmitVertex();
 	}
 

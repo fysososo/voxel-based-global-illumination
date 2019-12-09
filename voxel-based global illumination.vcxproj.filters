@@ -152,5 +152,11 @@
     <None Include="assets\code\shader\anisoMipmapOthers.comp">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="assets\code\shader\inject_propagation.comp">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="assets\code\shader\inject_radiance.comp">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

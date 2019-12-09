@@ -28,6 +28,9 @@ void Material::loadMaterial(string path)
 		else if (property == "albedo") {
 			matFile >> albedo.x >> albedo.y >> albedo.z;
 		}
+		else if (property == "emission") {
+			matFile >> emission.x >> emission.y >> emission.z;
+		}
 		else if (property == "NormalMap") {
 			int hasNormalMap;
 			matFile >> hasNormalMap;
@@ -66,6 +69,16 @@ void Material::loadMaterial(string path)
 			}
 			else {
 				albedoMap = -1;
+			}
+		}
+		else if (property == "EmissionMap") {
+			int hasEmissionMap;
+			matFile >> hasEmissionMap;
+			if (hasEmissionMap) {
+				loadTexture(en_TEXTURE_EMISSION);
+			}
+			else {
+				emissionMap = -1;
 			}
 		}
 		else {
@@ -119,6 +132,16 @@ void Material::BindMap(shared_ptr<Program> prog, GLenum textureSlot, en_textureT
 			prog->setBool("hasRoughnessMap", false);
 		}
 		break;
+	case en_TEXTURE_EMISSION:
+		if (emissionMap != -1) {
+			prog->setBool("hasEmissionMap", true);
+			glActiveTexture(textureSlot);
+			glBindTexture(GL_TEXTURE_2D, emissionMap);
+		}
+		else {
+			prog->setBool("hasEmissionMap", false);
+		}
+		break;
 	default:
 		break;
 	}
@@ -164,6 +187,10 @@ void Material::loadTexture(en_textureType type)
 		fileName = matName + "_ALBEDO.jpg";
 		albedoMap = bindTexture(type, modelPath + "/textures/" + fileName);
 		break;
+	case Material::en_TEXTURE_EMISSION:
+		fileName = matName + "_EMISSON.jpg";
+		albedoMap = bindTexture(type, modelPath + "/textures/" + fileName);
+		break;
 	default:
 		break;
 	}
@@ -187,6 +214,7 @@ unsigned int Material::bindTexture(en_textureType type, string path)
 	{
 	case en_TEXTURE_ALBEDO:
 	case en_TEXTURE_NORMAL:
+	case en_TEXTURE_EMISSION:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		break;
 	case en_TEXTURE_METANESS:

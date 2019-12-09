@@ -102,11 +102,9 @@ void DefferLightRender::Render()
 	//绑定体素数据
 	auto& voxelRender = *static_cast<VoxelizationRenderer*>(AssetsManager::Instance()->renderers["Voxelization"].get());
 	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_3D, voxelRender.albedo);
+	glBindTexture(GL_TEXTURE_3D, voxelRender.voxelRadiance);
 	glActiveTexture(GL_TEXTURE6);
-	glBindTexture(GL_TEXTURE_3D, voxelRender.albedo);
-	glActiveTexture(GL_TEXTURE7);
-	glBindTexture(GL_TEXTURE_3D, voxelRender.albedo);
+	glBindTexture(GL_TEXTURE_3D, voxelRender.normal);
 
 	//设置体素相关信息
 	progLight->setFloat("voxelScale", voxelRender.voxelSize);
