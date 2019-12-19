@@ -27,18 +27,27 @@ uniform float F0;
 uniform float IOR;
 uniform float KD;
 
+vec3 EncodeNormal(vec3 normal)
+{
+    return normal * 0.5f + vec3(0.5f);
+}
+
+vec3 DecodeNormal(vec3 normal)
+{
+    return normal * 2.0f - vec3(1.0f);
+}
+
 void main(){
 	//将贴图中的信息处理后存入各个GBuffer
 	//……
 	//法线
 	if(hasNormalMap){
 		lowp vec4 normal =  texture(NormalMap, TexCoord);
-		normal = normal*2.0f - 1.0f;
-		vec3 N = normalize(TBN*normal.xyz);
+		vec3 N = EncodeNormal(normalize(TBN*DecodeNormal(normal.xyz)));
 		gNormal = N;
 	}
 	else{
-		gNormal = normalize(TBN[2]);
+		gNormal = EncodeNormal(normalize(TBN[2]));
 	}
 
 	//位置

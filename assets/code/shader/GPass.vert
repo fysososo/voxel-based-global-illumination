@@ -15,9 +15,9 @@ uniform mat4 view;
 
 void main(){
 	TexCoord = aTexCoord;
-	vec3 T = normalize(vec3(model * vec4(aTangent,   0.0)));
-	vec3 B = normalize(vec3(model * vec4(aBiTangent, 0.0)));
-	vec3 N = normalize(vec3(model * vec4(aNormal,    0.0)));
+	vec3 T = normalize((model * vec4(aTangent,   0.0)).xyz);
+	vec3 B = normalize((model * vec4(aBiTangent, 0.0)).xyz);
+	vec3 N = normalize((model * vec4(aNormal,    0.0)).xyz);
 	TBN = mat3(T, B, N);
 	gl_Position = projection * view * model * vec4(aPos, 1.0f);
 	Position = (model * vec4(aPos,1.0f)).xyz;

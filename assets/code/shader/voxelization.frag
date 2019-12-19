@@ -56,30 +56,25 @@ uint convVec4ToRGBA8(vec4 val)
 
 void imageAtomicRGBA8Avg(layout(r32ui) volatile coherent uimage3D grid, ivec3 coords, vec4 value)
 {
-	value *= 255.0;
-	uint newVal = convVec4ToRGBA8(value);
-	uint prevStoredVal = 0;
-	uint curStoredVal;
-	uint numIterations = 0;
+    value.rgb *= 255.0;                 // optimize following calculations
+    uint newVal = convVec4ToRGBA8(value);
+    uint prevStoredVal = 0;
+    uint curStoredVal;
+    uint numIterations = 0;
 
-	//若未存值，则存值，进入不了循环
-	//若已有值，则不存值，并进入循环；两个值在循环中按照alpha值混合后，存值，离开循环
-	while((curStoredVal = imageAtomicCompSwap(grid, coords, prevStoredVal, newVal)) 
-			!= prevStoredVal
-			&& numIterations < 255
-			)
-	{
-		prevStoredVal = curStoredVal;
-		vec4 rval = convRGBA8ToVec4(curStoredVal);
-		rval.rgb = (rval.rgb * (rval.a/ 255.0f)); // Denormalize
-		vec4 curValF = rval + value;    // Add
-		if(curValF.a > 255){
-			curValF.a = 255;
-		}
-		newVal = convVec4ToRGBA8(curValF);
-		++numIterations;
+    while((curStoredVal = imageAtomicCompSwap(grid, coords, prevStoredVal, newVal)) 
+            != prevStoredVal
+            && numIterations < 255)
+    {
+        prevStoredVal = curStoredVal;
+        vec4 rval = convRGBA8ToVec4(curStoredVal);
+        rval.rgb = (rval.rgb * rval.a); // Denormalize
+        vec4 curValF = rval + value;    // Add
+        curValF.rgb /= curValF.a;       // Renormalize
+        newVal = convVec4ToRGBA8(curValF);
 
-	}
+        ++numIterations;
+    }
 }
 
 vec3 EncodeNormal(vec3 normal)
@@ -108,7 +103,10 @@ void main()
 	//体素化albedo
 	vec4 albedoData;
 	if(hasAlbedoMap){
-		albedoData = vec4(texture(AlbedoMap, TexCoord).xyz + albedo, 1.0f);
+		albedoData = vec4(vec3(
+		pow(texture(AlbedoMap, TexCoord).x, 2.2),
+		pow(texture(AlbedoMap, TexCoord).y, 2.2),
+		pow(texture(AlbedoMap, TexCoord).z, 2.2)) + albedo, 1.0f);
 	}
 	else{
 		albedoData = vec4(albedo, 1.0f);
@@ -118,12 +116,11 @@ void main()
 	//体素化法线
 	vec3 normalData;
 	if(hasNormalMap){
-		normalData = normalize(TBN*texture(NormalMap, TexCoord).rgb);
+		normalData = EncodeNormal(normalize(TBN*DecodeNormal(texture(NormalMap, TexCoord).rgb)));
 	}
 	else{
-		normalData = TBN[2];
+		normalData = EncodeNormal(normalize(TBN[2]));
 	}
-	
 	imageAtomicRGBA8Avg(texture_normal, ivec3(x,y,z), vec4(normalData,1.0f));
 
 	//体素化自发光

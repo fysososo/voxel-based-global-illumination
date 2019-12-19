@@ -24,9 +24,17 @@ void VoxelizationRenderer::Render()
 	//清空并绑定纹理
 	static GLfloat zero[] = { 0, 0, 0, 0 };
 	glClearTexImage(albedo, 0, GL_RGBA, GL_FLOAT, zero);
+	glClearTexImage(normal, 0, GL_RGBA, GL_FLOAT, zero);
+	glClearTexImage(emission, 0, GL_RGBA, GL_FLOAT, zero);
+	glClearTexImage(roughness, 0, GL_RGBA, GL_FLOAT, zero);
+	glClearTexImage(metalness, 0, GL_RGBA, GL_FLOAT, zero);
 	for (int i = 0; i < 6; i++) {
 		glClearTexImage(voxelAnisoMipmap[i], 0, GL_RGBA, GL_FLOAT, zero);
 	}
+	glClearTexImage(voxelRadiance, 0, GL_RGBA, GL_FLOAT, zero);
+
+
+	//绑定体素化对象
 	glBindImageTexture(0, albedo, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
 	glBindImageTexture(1, normal, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
 	glBindImageTexture(2, emission, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
@@ -62,17 +70,19 @@ void VoxelizationRenderer::Render()
 			mesh->Draw();
 		}
 	}
-
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
-
-	GenerateMipmapFirst(voxelRadiance);
-	GenerateMipmapOthers();
-
 	//开启通道写入
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
+
+	InjectRadiance();
+
+	GenerateMipmapFirst(voxelRadiance);
+	GenerateMipmapOthers();
+
+
 }
 
 void VoxelizationRenderer::SetMaterialUniforms()
@@ -115,7 +125,7 @@ void VoxelizationRenderer::SetMaterialUniforms()
 VoxelizationRenderer::VoxelizationRenderer()
 {
 	gridSize = 0;//网格尺寸（=视景体最长边）
-	dimension = 128;//一排体素的数量
+	dimension = 256;//一排体素的数量
 	voxelSize = 0;//单位体素尺寸
 	glGenVertexArrays(1, &VAO_drawVoxel);
 	Set3DTexture();
@@ -237,7 +247,7 @@ void VoxelizationRenderer::Set3DTexture()
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8,
 		dimension, dimension, dimension,
-		0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		0, GL_RGBA, GL_FLOAT, nullptr);
 
 	//创建roughness 3D纹理
 	glGenTextures(1, &voxelRadiance);
@@ -251,7 +261,7 @@ void VoxelizationRenderer::Set3DTexture()
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8,
 		dimension, dimension, dimension,
-		0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		0, GL_RGBA, GL_FLOAT, nullptr);
 
 	//创建6个方向的mipmap纹理
 	for (int i = 0; i < 6; i++)
@@ -266,7 +276,7 @@ void VoxelizationRenderer::Set3DTexture()
 
 		glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8,
 			dimension / 2, dimension / 2, dimension / 2,
-			0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+			0, GL_RGBA, GL_FLOAT, nullptr);
 
 		glGenerateMipmap(GL_TEXTURE_3D);
 	}
@@ -336,17 +346,17 @@ void VoxelizationRenderer::InjectRadiance()
 	prog->Use();
 
 	//绑定Albedo体素
-	glBindImageTexture(0, albedo, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
+	glBindImageTexture(0, albedo, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
 	//绑定Normal体素
-	glBindImageTexture(1, normal, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
+	glBindImageTexture(1, normal, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
 	//绑定Emisson体素
-	glBindImageTexture(2, emission, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
+	glBindImageTexture(2, emission, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
 	//绑定Roughness体素
-	glBindImageTexture(3, roughness, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
+	glBindImageTexture(3, roughness, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
 	//绑定Metalness体素
-	glBindImageTexture(4, metalness, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
+	glBindImageTexture(4, metalness, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
 	//绑定输出纹理
-	glBindImageTexture(5, voxelRadiance, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
+	glBindImageTexture(5, voxelRadiance, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
 
 	//设置光源
 	prog->setInt("lightCount", (int)AssetsManager::Instance()->pointLights.size());
@@ -371,34 +381,6 @@ void VoxelizationRenderer::InjectRadiance()
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
 }
 
-void VoxelizationRenderer::DrawVoxel(shared_ptr<Model> model)
-{
-	GLint width, height;
-	glfwGetWindowSize(Engine::Instance()->Window(), &width, &height);
-	glViewport(0, 0, width, height);
-
-	//使用体素化着色器程序
-	auto& prog = AssetsManager::Instance()->programs["DrawVoxel"];
-	prog->Use();
-
-	prog->setUnsignedInt("dimension", dimension);
-	prog->setFloat("voxelSize", voxelSize);
-	prog->setVec3("boxMin", sceneBoundingBox.MinPoint);
-	prog->setFloat("coneShadowTolerance", 0.1f);
-
-	//绑定纹理
-	glBindImageTexture(0, albedo, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
-
-	//设置MVP：相机自由移动
-	SetMVP_freeMove(prog);
-	setModelMat(prog, model);
-
-	//走过场,只是为了传输顶点索引，其实全由几何着色器绘制
-	glBindVertexArray(VAO_drawVoxel);
-	glDrawArrays(GL_POINTS, 0, dimension * dimension * dimension);
-	glBindVertexArray(0);
-}
-
 void VoxelizationRenderer::setModelMat(shared_ptr<Program> prog, shared_ptr<Model> model)
 {
 	//传递model矩阵
@@ -406,66 +388,4 @@ void VoxelizationRenderer::setModelMat(shared_ptr<Program> prog, shared_ptr<Mode
 	modelM = glm::translate(modelM, model->position);
 	modelM = glm::scale(modelM, glm::vec3(1.0f, 1.0f, 1.0f));
 	prog->setMat4("model", modelM);
-}
-
-void VoxelizationRenderer::drawSceneBoundingBox()
-{
-	//设置VAO
-	GLfloat vertices[] =
-	{
-		sceneBoundingBox.MinPoint.x, sceneBoundingBox.MinPoint.y, sceneBoundingBox.MinPoint.z,//左后下0
-		sceneBoundingBox.MinPoint.x, sceneBoundingBox.MinPoint.y, sceneBoundingBox.MaxPoint.z,//左前下1
-		sceneBoundingBox.MaxPoint.x, sceneBoundingBox.MinPoint.y, sceneBoundingBox.MaxPoint.z,//右前下2
-		sceneBoundingBox.MaxPoint.x, sceneBoundingBox.MinPoint.y, sceneBoundingBox.MinPoint.z,//右后下3
-
-		sceneBoundingBox.MinPoint.x, sceneBoundingBox.MaxPoint.y, sceneBoundingBox.MinPoint.z,//左后上4
-		sceneBoundingBox.MinPoint.x, sceneBoundingBox.MaxPoint.y, sceneBoundingBox.MaxPoint.z,//左前上5
-		sceneBoundingBox.MaxPoint.x, sceneBoundingBox.MaxPoint.y, sceneBoundingBox.MaxPoint.z,//右前上6
-		sceneBoundingBox.MaxPoint.x, sceneBoundingBox.MaxPoint.y, sceneBoundingBox.MinPoint.z //右后上7
-	};
-
-	GLuint indices[] =
-	{
-		0,1,2,//下1
-		2,3,0,//下2
-		4,5,7,//上1
-		7,6,5,//上2
-		1,2,5,//前1
-		5,6,2,//前2
-		0,3,7,//后1
-		7,4,0,//后2
-		0,1,5,//左1
-		5,4,0,//左2
-		2,3,7,//右1
-		7,6,2 //右2
-	};
-
-	GLuint VAO, VBO, EBO;
-
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-	//绘制包围盒
-	glDisable(GL_CULL_FACE);
-	auto& prog2 = AssetsManager::Instance()->programs["WhiteLine"];
-	prog2->Use();
-	SetMVP_freeMove(prog2);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }

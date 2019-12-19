@@ -2,7 +2,7 @@ roughness 0.2
 IOR 1.64
 metalness 0.6
 F0 0.04 0.04 0.04
-albedo 0.2 0.6 0.0
+albedo 0.0 0.0 0.0
 emission 0.0 0.0 0.0
 NormalMap 1
 RoughnessMap 1

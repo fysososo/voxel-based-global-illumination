@@ -104,10 +104,16 @@ void DefferLightRender::Render()
 	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_3D, voxelRender.voxelRadiance);
 	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_3D, voxelRender.normal);	
+	glActiveTexture(GL_TEXTURE7);
 	glBindTexture(GL_TEXTURE_3D, voxelRender.normal);
 
 	//设置体素相关信息
-	progLight->setFloat("voxelScale", voxelRender.voxelSize);
+	progLight->setFloat("voxelScale", 1.0f/(voxelRender.voxelSize*voxelRender.dimension));
+	progLight->setFloat("voxelSize", voxelRender.voxelSize);
+	progLight->setFloat("bounceStrength", 1.0f);
+	progLight->setFloat("maxTracingDistanceGlobal", 1.0f);
+	progLight->setFloat("samplingFactor", 0.5f);
 	progLight->setInt("volumeDimension", voxelRender.dimension);
 	progLight->setVec3("worldMaxPoint", voxelRender.sceneBoundingBox.MaxPoint);
 	progLight->setVec3("worldMinPoint", voxelRender.sceneBoundingBox.MinPoint);
@@ -117,6 +123,8 @@ void DefferLightRender::Render()
 		glActiveTexture(GL_TEXTURE8+i);
 		glBindTexture(GL_TEXTURE_3D, voxelRender.voxelAnisoMipmap[i]);
 	}
+
+	glBindImageTexture(0, gDebug, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA16F);
 
 	//光照渲染
 	glBindVertexArray(quadVAO);
@@ -155,6 +163,8 @@ void DefferLightRender::SetMaterialUniforms()
 	glGenTextures(1, &gNormal);
 	glBindTexture(GL_TEXTURE_2D, gNormal);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 800, 600, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
@@ -163,6 +173,8 @@ void DefferLightRender::SetMaterialUniforms()
 	glGenTextures(1, &gColorSpec);
 	glBindTexture(GL_TEXTURE_2D, gColorSpec);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColorSpec, 0);
@@ -171,9 +183,20 @@ void DefferLightRender::SetMaterialUniforms()
 	glGenTextures(1, &gRoughness);
 	glBindTexture(GL_TEXTURE_2D, gRoughness);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gRoughness, 0);
+
+	//Debug
+	glGenTextures(1, &gDebug);
+	glBindTexture(GL_TEXTURE_2D, gDebug);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// - 告诉OpenGL我们将要使用(帧缓冲的)哪种颜色附件来进行渲染
 	GLuint attachments[4] = {
@@ -196,6 +219,7 @@ void DefferLightRender::SetMaterialUniforms()
 	glUniform1i(glGetUniformLocation(progLight->getID(), "gRoughness"), 2);
 	glUniform1i(glGetUniformLocation(progLight->getID(), "gMetalness"), 3);
 	glUniform1i(glGetUniformLocation(progLight->getID(), "gAbledo"), 4);
+	
 
 	//体素数据
 	glUniform1i(glGetUniformLocation(progLight->getID(), "voxelRadiance"), 5);

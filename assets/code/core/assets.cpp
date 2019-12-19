@@ -24,7 +24,7 @@ AssetsManager::AssetsManager()
 	cameras["FPS"]->SetAsActive();//激活
 
 	//加载灯光
-	pointLights.push_back(make_shared<Pointlight>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(1.0f, 1.0f, 1.0f), 15.0f));
+	pointLights.push_back(make_shared<Pointlight>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(1.0f, 1.0f, 1.0f), 85.0f));
 	//pointLights.push_back(make_shared<Pointlight>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(1.0f, 1.0f, 1.0f), 15.0f));
 	//加载模型
 	models["sphere1"] = make_shared<Model>("assets/model/sphere/sphere.obj", glm::vec3(-1.5f,0.0f,3.0f));

@@ -12,9 +12,7 @@ private:
 	void SetMVP_freeMove(shared_ptr<Program> prog);
 	void SetMVP_ortho(shared_ptr<Program> prog, BoundingBox& boundingBox);
 	void Set3DTexture();//设置3d纹理
-	void DrawVoxel(shared_ptr<Model> model);//绘制体素
 	void setModelMat(shared_ptr<Program> prog, shared_ptr<Model> model);
-	void drawSceneBoundingBox();
 	void GenerateMipmapOthers();
 	void GenerateMipmapFirst(GLuint baseTexture);
 	void InjectRadiance();
