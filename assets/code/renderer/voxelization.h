@@ -16,6 +16,7 @@ private:
 	void GenerateMipmapOthers();
 	void GenerateMipmapFirst(GLuint baseTexture);
 	void InjectRadiance();
+	void RadiancePropagation();
 
 public:
 	virtual void Render() override;
@@ -27,6 +28,8 @@ public:
 	GLuint radiance;//储存体素辐照度的3D纹理
 	GLuint roughness;//储存体素粗糙度的3D纹理
 	GLuint metalness;//储存体素金属度的3D纹理
+	GLuint debug_comp;//調試用
+	GLuint debug_comp_injectRadiance;//調試用
 
 	GLuint voxelRadiance;
 	std::array<GLuint, 6> voxelAnisoMipmap;

@@ -46,7 +46,7 @@ void Engine::Initialize()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);//OpenGL主版本
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);//OpenGL副版本
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);//核心模式，不需要向后兼容立即渲染模式
-
+	glfwWindowHint(GLFW_DOUBLEBUFFER, GL_TRUE);
 
 	//创建GLFW窗口
 	window = glfwCreateWindow(800, 600, "TestOpenGL", NULL, NULL);
@@ -115,8 +115,9 @@ void Engine::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	Camera::Active()->ProcessMouseScroll(yoffset);
 }
 
-void Engine::processInput(GLFWwindow* window)
+bool Engine::processInput(GLFWwindow* window)
 {
+	bool renderStateChange = false;
 	//每个按键都注册成回调函数太麻烦，不如一个个手动检查，统一在一个函数也更直观
 	//按键状态在检查之前会保持（避免在检查前按键已经释放的问题）
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -140,37 +141,69 @@ void Engine::processInput(GLFWwindow* window)
 		}
 	}
 	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
-		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.z += 0.1f;
-		//AssetsManager::Instance()->models["lightBox"+to_string(currentProcessLightIndex)]->position.x += 0.1f;
-	
+		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.z += 2.0f;
+		renderStateChange = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.z -= 0.1f;
-		//AssetsManager::Instance()->models["lightBox" + to_string(currentProcessLightIndex)]->position.x -= 0.1f;
+		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.z -= 2.0f;
+		renderStateChange = true;
 	}
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.x += 2.0f;
+		renderStateChange = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS) {
+		AssetsManager::Instance()->pointLights[currentProcessLightIndex]->position.x -= 2.0f;
+		renderStateChange = true;
+	}
+	if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
+		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
+		progLight->Use();
+		progLight->setInt("showMode", 0);
+	}
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
+		progLight->Use();
+		progLight->setInt("showMode", 1);
+	}	
+	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
+		progLight->Use();
+		progLight->setInt("showMode", 2);
+	}	
+	if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
+		progLight->Use();
+		progLight->setInt("showMode", 3);
+	}
+	if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
+		progLight->Use();
+		progLight->setInt("showMode", 4);
+	}
+
+	return renderStateChange;
 }
-
-
-
-
 
 void Engine::RenderLoop()
 {
-	for (auto& render : AssetsManager::Instance()->renderers) {
-		render.second->SetMaterialUniforms();
-	}
+	AssetsManager::Instance()->renderers["DefferLight"]->SetMaterialUniforms();
+	AssetsManager::Instance()->renderers["Voxelization"]->SetMaterialUniforms();
+	AssetsManager::Instance()->renderers["Voxelization"]->Render();
+
 	while (!glfwWindowShouldClose(window))
 	{
 		//计算每帧的间隔时间
 		GLfloat currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-
-		processInput(window);//处理键盘输入
-
-		AssetsManager::Instance()->renderers["Voxelization"]->Render();
+		//处理键盘输入
+		if (processInput(window)) {
+			AssetsManager::Instance()->renderers["Voxelization"]->Render();
+		}
+		//AssetsManager::Instance()->renderers["Voxelization"]->Render();
 		AssetsManager::Instance()->renderers["DefferLight"]->Render();
-
+		
 		glfwSwapBuffers(window);//交换颜色缓冲
 		glfwPollEvents();//检查是否触发事件，并调用已注册的对应的回调函数
 

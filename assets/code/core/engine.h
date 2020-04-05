@@ -46,6 +46,6 @@ private:
 	static void framebuffer_size_callback(GLFWwindow* window, int width, int height);//窗口大小变化回调函数
 	static void mouse_callback(GLFWwindow* window, double xpos, double ypos);//鼠标移动回调函数
 	static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);//鼠标滚轮回调函数
-	static void processInput(GLFWwindow* window);//键盘输入处理函数
+	static bool processInput(GLFWwindow* window);//键盘输入处理函数
 };
 

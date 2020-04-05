@@ -5,19 +5,25 @@ layout (triangle_strip, max_vertices = 3) out;
 in Vertex
 {
 	vec2 texCoord;
-	mat3 TBN;
+	vec3 normal;
 } In[3];
 
 
-out vec3 FragPos;
-out vec2 TexCoord;
-out vec3 ClipPos;
-out vec4 BoundingBox;
-out mat3 TBN;
+out GeometryOut
+{
+	vec3 wsPosition;
+    vec3 position;
+    vec3 normal;
+    vec2 texCoord;
+    flat vec4 triangleAABB;
+} Out;
 
 uniform mat4 viewProject[3];
 uniform mat4 viewProjectI[3];
 uniform uint dimension;
+
+uniform float voxelScale;
+uniform vec3 worldMinPoint;
 
 uint selectVP()
 {
@@ -60,11 +66,18 @@ vec4 AxisAlignedBoundingBox(vec4 pos[3], vec2 pixelDiagonal)
 }
 
 void main() {
+
+	//获取纹理坐标
+	vec2 texCoord[3];
 	//选择vp矩阵
 	uint projectIndex = selectVP();
 	mat4 viewProjection = viewProject[projectIndex];
 	mat4 viewProjectionI = viewProjectI[projectIndex];
-
+		
+	for (int i = 0; i < gl_in.length(); i++)
+	{
+		texCoord[i] = In[i].texCoord; 
+	}
 	//获取裁剪空间坐标
 	vec4 clipPos[3] = vec4[3]
 	(
@@ -73,19 +86,12 @@ void main() {
 		viewProjection * gl_in[2].gl_Position
 	);
 
-	//获取纹理坐标
-	vec2 texCoord[3];
-	for (int i = 0; i < gl_in.length(); i++)
-	{
-		texCoord[i] = In[i].texCoord; 
-	}
-
 	//确保输入的三角形的顶点环绕顺序都是逆时针方向
 	vec4 trianglePlane;
 	trianglePlane.xyz = cross(clipPos[1].xyz - clipPos[0].xyz, clipPos[2].xyz - clipPos[0].xyz);
 	trianglePlane.xyz = normalize(trianglePlane.xyz);
-	if(trianglePlane.z == 0.0f) return;
 	trianglePlane.w = -dot(clipPos[0].xyz, trianglePlane.xyz);
+
 	if (dot(trianglePlane.xyz, vec3(0.0, 0.0, 1.0)) < 0.0)
 	{
 		vec4 vertexTemp = clipPos[2];
@@ -97,7 +103,11 @@ void main() {
 		clipPos[1] = vertexTemp;
 		texCoord[1] = texCoordTemp;
 	}
+	vec2 halfPixel = vec2(1.0f / dimension);
 
+	if(trianglePlane.z == 0.0f) return;
+	//计算包围盒
+	Out.triangleAABB = AxisAlignedBoundingBox(clipPos, halfPixel);
 	//过原点与三角边的三个齐次平面
 	vec3 planes[3];
 	planes[0] = cross(clipPos[0].xyw - clipPos[2].xyw, clipPos[2].xyw);
@@ -105,13 +115,11 @@ void main() {
 	planes[2] = cross(clipPos[2].xyw - clipPos[1].xyw, clipPos[1].xyw);
 
 	//将三个齐次平面沿各自法线向外平移一个像素单元格
-	vec2 halfPixel = vec2(1.0f / dimension);
+
 	planes[0].z -= dot(halfPixel, abs(planes[0].xy));
 	planes[1].z -= dot(halfPixel, abs(planes[1].xy));
 	planes[2].z -= dot(halfPixel, abs(planes[2].xy));
 
-	//计算包围盒
-	BoundingBox = AxisAlignedBoundingBox(clipPos, halfPixel);
 
 	//三个齐次平面的两两交线
 	vec3 intersection[3];
@@ -137,12 +145,15 @@ void main() {
 	{
 		//逆投影变换，计算新顶点的世界坐标
 		vec4 voxelPos = viewProjectionI * clipPos[i];
-		FragPos = voxelPos.xyz;
+		voxelPos.xyz /= voxelPos.w;
+		voxelPos.xyz -= worldMinPoint;
+		voxelPos *= voxelScale;
 
 		gl_Position = clipPos[i];
-		ClipPos = clipPos[i].xyz;
-		TexCoord = In[i].texCoord;
-		TBN = In[i].TBN;
+		Out.position = clipPos[i].xyz;
+		Out.texCoord = In[i].texCoord;
+		Out.normal = In[i].normal;
+		Out.wsPosition = voxelPos.xyz * dimension;
 		EmitVertex();
 	}
 

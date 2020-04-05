@@ -31,10 +31,26 @@ void Material::loadMaterial(string path)
 		else if (property == "emission") {
 			matFile >> emission.x >> emission.y >> emission.z;
 		}
+		else if (property == "specular") {
+			matFile >> specular.x >> specular.y >> specular.z;
+		}
+		else if (property == "shininess") {
+			matFile >> shininess;
+		}
 		else if (property == "NormalMap") {
 			int hasNormalMap;
 			matFile >> hasNormalMap;
 			if (hasNormalMap) {
+				loadTexture(en_TEXTURE_NORMAL);
+			}
+			else {
+				normalMap = -1;
+			}
+		}
+		else if (property == "SpecularMap") {
+			int hasSpecularMap;
+			matFile >> hasSpecularMap;
+			if (hasSpecularMap) {
 				loadTexture(en_TEXTURE_NORMAL);
 			}
 			else {
@@ -188,8 +204,12 @@ void Material::loadTexture(en_textureType type)
 		albedoMap = bindTexture(type, modelPath + "/textures/" + fileName);
 		break;
 	case Material::en_TEXTURE_EMISSION:
-		fileName = matName + "_EMISSON.jpg";
+		fileName = matName + "_EMISSION.jpg";
 		albedoMap = bindTexture(type, modelPath + "/textures/" + fileName);
+		break;
+	case Material::en_TEXTURE_SPECULAR:
+		fileName = matName + "_SPECULAR.jpg";
+		specularMap = bindTexture(type, modelPath + "/textures/" + fileName);
 		break;
 	default:
 		break;
@@ -215,6 +235,7 @@ unsigned int Material::bindTexture(en_textureType type, string path)
 	case en_TEXTURE_ALBEDO:
 	case en_TEXTURE_NORMAL:
 	case en_TEXTURE_EMISSION:
+	case en_TEXTURE_SPECULAR:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		break;
 	case en_TEXTURE_METANESS:

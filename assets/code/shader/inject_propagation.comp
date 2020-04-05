@@ -3,13 +3,16 @@
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
 layout(binding = 0, rgba8) uniform image3D voxelComposite;
-layout(binding = 1) uniform sampler3D voxelAlbedo;
-layout(binding = 2) uniform sampler3D voxelNormal;
-layout(binding = 3) uniform sampler3D voxelTexMipmap[6];
+//调试用缓存
+layout(binding = 1, rgba16f) uniform image3D debug_comp;
+
+layout(binding = 2) uniform sampler3D voxelAlbedo;
+layout(binding = 3) uniform sampler3D voxelNormal;
+layout(binding = 4) uniform sampler3D voxelTexMipmap[6];
 
 const float PI = 3.14159265f;
 const float EPSILON = 1e-30;
-uniform float maxTracingDistanceGlobal = 1.0f;
+uniform float maxTracingDistanceGlobal = 0.95f;
 uniform int volumeDimension;
 uniform uint checkBoundaries = 0;
 
@@ -29,7 +32,7 @@ const float diffuseConeWeights[] =
     2.0f * PI / 9.0f,
     2.0f * PI / 9.0f,
 };
-
+int temp;
 vec4 TraceCone(vec3 position, vec3 direction, float aperture)
 {
     uvec3 visibleFace;
@@ -39,30 +42,32 @@ vec4 TraceCone(vec3 position, vec3 direction, float aperture)
     visibleFace.x = (direction.x < 0.0) ? 0 : 1;
     visibleFace.y = (direction.y < 0.0) ? 2 : 3;
     visibleFace.z = (direction.z < 0.0) ? 4 : 5;
-    // weight per axis for aniso sampling
+    //各向异性采样权值
     vec3 weight = direction * direction;
-    // navigation
+    // 体素尺寸
     float voxelSize = 1.0f / anisoDimension;
-    // move one voxel further to avoid self collision
+    //避免自碰撞
     float dst = voxelSize;
     float diameter = aperture * dst;
     vec3 samplePos = position + direction * dst;
-    // control vars
+    //miplevel
     float mipLevel = 0.0f;
-    // accumulated sample
+    //累计值
     vec4 coneSample = vec4(0.0f);
     vec4 anisoSample = vec4(0.0f);
     
-    // outside bounds
+    //出界判断
     if(samplePos.x < 0.0f || samplePos.y < 0.0f || samplePos.z < 0.0f
         || samplePos.x > 1.0f || samplePos.y > 1.0f || samplePos.z > 1.0f) 
     { 
-        return coneSample; 
+        return coneSample;
     }
+    bool isFirst = true;
 
+    //coneSample.a <= 1.0f && 
     while(coneSample.a <= 1.0f && dst <= maxTracingDistanceGlobal)
     {
-        // outisde bounds
+        //出界判断
         if (checkBoundaries > 0 && (samplePos.x < 0.0f || samplePos.y < 0.0f || samplePos.z < 0.0f
             || samplePos.x > 1.0f || samplePos.y > 1.0f || samplePos.z > 1.0f)) 
         { 
@@ -71,28 +76,33 @@ vec4 TraceCone(vec3 position, vec3 direction, float aperture)
 
         mipLevel = log2(diameter * anisoDimension);
         mipLevel = max(mipLevel - 1.0f, 0.0f);
-        // aniso sampling
+        //各向异性采样
         anisoSample = weight.x * textureLod(voxelTexMipmap[visibleFace.x], samplePos, mipLevel)
                     + weight.y * textureLod(voxelTexMipmap[visibleFace.y], samplePos, mipLevel)
                     + weight.z * textureLod(voxelTexMipmap[visibleFace.z], samplePos, mipLevel);
-        // accumulate sampling
-        coneSample += (1.0f - coneSample.a) * anisoSample;
-        // move further into volume
+        if(isFirst && temp == 3 && (anisoSample.x > 0 || anisoSample.z > 0 || anisoSample.y > 0))
+        {
+            imageStore(debug_comp, ivec3(gl_GlobalInvocationID), vec4(textureLod(voxelTexMipmap[visibleFace.x], samplePos, mipLevel).xyz, mipLevel));
+            isFirst = false;
+        }
+        //积累
+        coneSample += (1 - coneSample.a) * anisoSample;
+        //step
         dst += max(diameter, voxelSize);
         diameter = dst * aperture;
         samplePos = direction * dst + position;
     }
-
+    
     return coneSample;
 }
 
 vec4 CalculateIndirectLighting(vec3 position, vec3 normal)
 {
-    // move position further along normal, 1 voxel step, half dimension
+    //沿法线移动
     position = position + normal * (1.0f / (volumeDimension / 2.0f));
-    // cummulative
+    //用来累计的变量
     vec4 diffuseTrace = vec4(0.0f);
-    // diffuse cone setup
+    // diffuse cone的设置
     const float aperture = 1.0f;
     vec3 guide = vec3(0.0f, 1.0f, 0.0f);
 
@@ -101,16 +111,16 @@ vec4 CalculateIndirectLighting(vec3 position, vec3 normal)
         guide = vec3(0.0f, 0.0f, 1.0f);
     }
 
-    // Find a tangent and a bitangent
+    //计算出切线和副切线
     vec3 right = normalize(guide - dot(normal, guide) * normal);
-    vec3 up = cross(right, normal);
+    vec3 up = normalize(cross(right, normal));
 
     for(int i = 0; i < 4; i++)
     {
         vec3 coneDirection = normal;
         coneDirection += propagationDirections[i].x * right + propagationDirections[i].z * up;
         coneDirection = normalize(coneDirection);
-
+        temp = i;
         diffuseTrace += TraceCone(position, coneDirection, aperture) * diffuseConeWeights[i];
     }
 
@@ -134,21 +144,23 @@ void main()
         gl_GlobalInvocationID.z >= volumeDimension) return;
 
     ivec3 writePos = ivec3(gl_GlobalInvocationID);
+    
+    //获取albedo
     vec4 albedo = texelFetch(voxelAlbedo, writePos, 0);
-
     if(albedo.a < EPSILON) { return; }
-
+    //获取直接光照
     vec4 directLight = imageLoad(voxelComposite, writePos);
-    // normal from voxelization
+    //获取并解压法线
     vec3 normal = texelFetch(voxelNormal, writePos, 0).xyz;
-    // normal is stored in 0-1 range, restore to -1 -> -1
     normal = normalize(DecodeNormal(normal));
-    // calculate indirect lighting - first bounce onto the voxel texture
+    
+    //计算第一次反射，此处position为纹理空间坐标
     vec3 position = vec3(writePos) / volumeDimension;
     vec4 indirectLighting = CalculateIndirectLighting(position, normal);
-    // first bounce gi component only
+    
+    //和albedo混合
     indirectLighting *= albedo;
-    // first bounce + direct lighting
+    //和直接光照混合
     vec4 radiance = directLight + indirectLighting;
     radiance.a = directLight.a;
 

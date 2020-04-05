@@ -1,10 +1,13 @@
 #version 450 core
 
-in vec3 FragPos;
-in vec2 TexCoord;
-in vec3 ClipPos;
-in vec4 BoundingBox;
-in mat3 TBN;
+in GeometryOut
+{
+    vec3 wsPosition;
+    vec3 position;
+    vec3 normal;
+    vec2 texCoord;
+    flat vec4 triangleAABB;
+} In;
 
 out vec4 fragColor;
 
@@ -32,9 +35,6 @@ uniform float roughness;
 uniform bool hasMetalnessMap;
 uniform sampler2D MetalnessMap;
 uniform float metalness;
-
-uniform float voxelSize;
-uniform vec3 boxMin;
 
 //32uint-->vec4
 vec4 convRGBA8ToVec4(uint val)
@@ -90,65 +90,54 @@ vec3 DecodeNormal(vec3 normal)
 void main()
 {   
 	//剔除因保守光栅化产生的多余体素
-	if( ClipPos.x < BoundingBox.x || ClipPos.y < BoundingBox.y || 
-		ClipPos.x > BoundingBox.z || ClipPos.y > BoundingBox.w )
+	if( In.position.x < In.triangleAABB.x || In.position.y < In.triangleAABB.y || 
+		In.position.x > In.triangleAABB.z || In.position.y > In.triangleAABB.w )
 	{
 		discard;
 	}
 
-	int x = int((FragPos.x - boxMin.x)/voxelSize);
-	int y = int((FragPos.y - boxMin.y)/voxelSize);
-	int z = int((FragPos.z - boxMin.z)/voxelSize);
+	ivec3 iposition = ivec3(In.wsPosition);
 
 	//体素化albedo
 	vec4 albedoData;
 	if(hasAlbedoMap){
-		albedoData = vec4(vec3(
-		pow(texture(AlbedoMap, TexCoord).x, 2.2),
-		pow(texture(AlbedoMap, TexCoord).y, 2.2),
-		pow(texture(AlbedoMap, TexCoord).z, 2.2)) + albedo, 1.0f);
+		albedoData = texture(AlbedoMap, In.texCoord);
 	}
 	else{
 		albedoData = vec4(albedo, 1.0f);
 	}
-	imageAtomicRGBA8Avg(texture_albedo, ivec3(x,y,z), albedoData);
+	imageAtomicRGBA8Avg(texture_albedo, iposition, albedoData);
 
 	//体素化法线
-	vec3 normalData;
-	if(hasNormalMap){
-		normalData = EncodeNormal(normalize(TBN*DecodeNormal(texture(NormalMap, TexCoord).rgb)));
-	}
-	else{
-		normalData = EncodeNormal(normalize(TBN[2]));
-	}
-	imageAtomicRGBA8Avg(texture_normal, ivec3(x,y,z), vec4(normalData,1.0f));
+	vec3 normalData = EncodeNormal(normalize(In.normal));
+	imageAtomicRGBA8Avg(texture_normal, iposition, vec4(normalData,1.0f));
 
 	//体素化自发光
 	vec4 emissionData;
 	if(hasEmissionMap){
-		emissionData = vec4(texture(EmissionMap, TexCoord).xyz + emission, 1.0f);
+		emissionData = vec4(texture(EmissionMap, In.texCoord).xyz + emission, 1.0f);
 	}
 	else{
 		emissionData = vec4(emission, 1.0f);
 	}
-	imageAtomicRGBA8Avg(texture_emission, ivec3(x,y,z), vec4(emission.xyz,1.0f));
+	imageAtomicRGBA8Avg(texture_emission, iposition, vec4(emissionData.xyz,1.0f));
 
 	//体素化粗超度
 	vec4 roughnessData;
 	if(hasRoughnessMap){
-		roughnessData = texture(RoughnessMap, TexCoord) + vec4(roughness);
+		roughnessData = texture(RoughnessMap, In.texCoord) + vec4(roughness);
 	}else{
 		roughnessData = vec4(roughness);
 	}
-	imageAtomicRGBA8Avg(texture_roughness, ivec3(x,y,z), vec4(vec3(roughnessData.r),1.0f));
+	imageAtomicRGBA8Avg(texture_roughness, iposition, vec4(vec3(roughnessData.r),1.0f));
 	
 	//体素化金属度vec4 roughnessData;
 	vec4 metalnessData;
 	if(hasMetalnessMap){
-		metalnessData = texture(MetalnessMap, TexCoord) + vec4(metalness);
+		metalnessData = texture(MetalnessMap, In.texCoord) + vec4(metalness);
 	}else{
 		roughnessData = vec4(roughness);
 	}
-	imageAtomicRGBA8Avg(texture_metalness, ivec3(x,y,z), vec4(vec3(metalnessData.r),1.0f));
+	imageAtomicRGBA8Avg(texture_metalness, iposition, vec4(vec3(metalnessData.r),1.0f));
 	
 }

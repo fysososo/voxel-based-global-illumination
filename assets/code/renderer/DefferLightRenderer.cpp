@@ -28,25 +28,26 @@ void DefferLightRender::Render()
 {
 
 	SetAsActive();
-
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	//设置清屏颜色
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	//设置视口
 	GLint width, height;
 	glfwGetWindowSize(Engine::Instance()->Window(), &width, &height);
 	glViewport(0, 0, width, height);
-
-	glEnable(GL_DEPTH_TEST);
-	//glDisable(GL_CULL_FACE);
-
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);//设置清屏颜色
-	glClearDepth(1.0f);
-
-	//设置几何阶段渲染目标
-	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 	//清空目标的颜色缓存和深度缓存
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//加载几何阶段program
 	auto& progGPass = AssetsManager::Instance()->programs["GPass"];
 	progGPass->Use();
+	glClearDepth(1.0f);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CCW);
+	glCullFace(GL_BACK);
 	//配置相机
 	SetVP(progGPass);
 	//渲染模型
@@ -58,19 +59,31 @@ void DefferLightRender::Render()
 			mesh->material->BindMap(progGPass, GL_TEXTURE1, Material::en_TEXTURE_ALBEDO);
 			mesh->material->BindMap(progGPass, GL_TEXTURE2, Material::en_TEXTURE_ROUGHNESS);
 			mesh->material->BindMap(progGPass, GL_TEXTURE3, Material::en_TEXTURE_METANESS);
+			mesh->material->BindMap(progGPass, GL_TEXTURE4, Material::en_TEXTURE_EMISSION);
+			mesh->material->BindMap(progGPass, GL_TEXTURE5, Material::en_TEXTURE_SPECULAR);
 
 			//设置材质信息
 			progGPass->setFloat("metalness", mesh->material->metalness);
+			progGPass->setFloat("shininess", mesh->material->shininess);
 			progGPass->setFloat("roughness", mesh->material->roughness);
 			progGPass->setVec3("albedo", mesh->material->albedo);
+			progGPass->setVec3("specular", mesh->material->specular);
+			progGPass->setVec3("emission", mesh->material->emission);
 			progGPass->setFloat("F0", mesh->material->F0.x);
 			progGPass->setFloat("KD", 0.4f);
 			progGPass->setFloat("IOR", mesh->material->IOR);
 			mesh->Draw();
 		}
 	}
-	glBindVertexArray(0);
 
+	//设置渲染目标为窗口
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);	
+	//设置视口
+	glfwGetWindowSize(Engine::Instance()->Window(), &width, &height);
+	glViewport(0, 0, width, height);
+	//清空目标的颜色缓存和深度缓存
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//加载光照阶段program
 	auto& progLight = AssetsManager::Instance()->programs["lightPass"];
 	progLight->Use();
@@ -81,32 +94,34 @@ void DefferLightRender::Render()
 	for (int i = 0; i < AssetsManager::Instance()->pointLights.size(); i++) {
 		auto& light = AssetsManager::Instance()->pointLights[i];
 		progLight->setVec3("pointLight[" + to_string(i) + "].position", light->position);
-		progLight->setVec3("pointLight[" + to_string(i) + "].color", light->color);
-		progLight->setFloat("pointLight[" + to_string(i) + "].intensity", light->intensity);
+		progLight->setVec3("pointLight[" + to_string(i) + "].ambient", light->Ambient());
+		progLight->setVec3("pointLight[" + to_string(i) + "].diffuse", light->Diffuse());
+		progLight->setVec3("pointLight[" + to_string(i) + "].specular", light->Specular());
+		progLight->setFloat("pointLight[" + to_string(i) + "].attenuation.constant", 1.0f);
+		progLight->setFloat("pointLight[" + to_string(i) + "].attenuation.linear", 0.2f);
+		progLight->setFloat("pointLight[" + to_string(i) + "].attenuation.quadratic", 0.08f);
 	}
-	//设置渲染目标为窗口
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	//设置纹理
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, gPosition);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, gRoughness);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
 	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, gMetalness);
+	glBindTexture(GL_TEXTURE_2D, gRoughness);
 	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, gMetalness);
+	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_2D, gColorSpec);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, gEmission);
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, gSpecular);
 
 	//绑定体素数据
 	auto& voxelRender = *static_cast<VoxelizationRenderer*>(AssetsManager::Instance()->renderers["Voxelization"].get());
-	glActiveTexture(GL_TEXTURE5);
+	glActiveTexture(GL_TEXTURE8);
 	glBindTexture(GL_TEXTURE_3D, voxelRender.voxelRadiance);
-	glActiveTexture(GL_TEXTURE6);
-	glBindTexture(GL_TEXTURE_3D, voxelRender.normal);	
-	glActiveTexture(GL_TEXTURE7);
-	glBindTexture(GL_TEXTURE_3D, voxelRender.normal);
 
 	//设置体素相关信息
 	progLight->setFloat("voxelScale", 1.0f/(voxelRender.voxelSize*voxelRender.dimension));
@@ -118,9 +133,12 @@ void DefferLightRender::Render()
 	progLight->setVec3("worldMaxPoint", voxelRender.sceneBoundingBox.MaxPoint);
 	progLight->setVec3("worldMinPoint", voxelRender.sceneBoundingBox.MinPoint);
 
-
+	//反向变换
+	glm::mat4 inverseView = glm::inverse(Camera::Active()->GetViewMatrix()); 
+	glm::mat4 inverseProjection = glm::inverse(glm::perspective(glm::radians(Camera::Active()->Zoom), (float)width / (float)height, 0.1f, 100.0f));
+	progLight->setMat4("inverseProjectionView", inverseView*inverseProjection);
 	for (int i = 0; i < 6; i++) {
-		glActiveTexture(GL_TEXTURE8+i);
+		glActiveTexture(GL_TEXTURE9+i);
 		glBindTexture(GL_TEXTURE_3D, voxelRender.voxelAnisoMipmap[i]);
 	}
 
@@ -129,7 +147,6 @@ void DefferLightRender::Render()
 	//光照渲染
 	glBindVertexArray(quadVAO);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	glBindVertexArray(0);
 	
 }
 
@@ -147,6 +164,8 @@ void DefferLightRender::SetMaterialUniforms()
 	glUniform1i(glGetUniformLocation(progGPass->getID(), "AlbedoMap"), 1);
 	glUniform1i(glGetUniformLocation(progGPass->getID(), "RoughnessMap"), 2);
 	glUniform1i(glGetUniformLocation(progGPass->getID(), "MetalnessMap"), 3);
+	glUniform1i(glGetUniformLocation(progGPass->getID(), "EmissionMap"), 4);
+	glUniform1i(glGetUniformLocation(progGPass->getID(), "SpecularMap"), 5);
 
 	glGenFramebuffers(1, &gBuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
@@ -154,7 +173,7 @@ void DefferLightRender::SetMaterialUniforms()
 	//位置
 	glGenTextures(1, &gPosition);
 	glBindTexture(GL_TEXTURE_2D, gPosition);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 800, 600, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
@@ -162,9 +181,7 @@ void DefferLightRender::SetMaterialUniforms()
 	// - 法线颜色缓冲
 	glGenTextures(1, &gNormal);
 	glBindTexture(GL_TEXTURE_2D, gNormal);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 800, 600, 0, GL_RGB, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
@@ -172,9 +189,7 @@ void DefferLightRender::SetMaterialUniforms()
 	// - 颜色 + 镜面颜色KD
 	glGenTextures(1, &gColorSpec);
 	glBindTexture(GL_TEXTURE_2D, gColorSpec);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColorSpec, 0);
@@ -183,11 +198,25 @@ void DefferLightRender::SetMaterialUniforms()
 	glGenTextures(1, &gRoughness);
 	glBindTexture(GL_TEXTURE_2D, gRoughness);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gRoughness, 0);
+	
+	//自發光
+	glGenTextures(1, &gEmission);
+	glBindTexture(GL_TEXTURE_2D, gEmission);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 800, 600, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gEmission, 0);
+
+	//镜面反射
+	glGenTextures(1, &gSpecular);
+	glBindTexture(GL_TEXTURE_2D, gSpecular);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 800, 600, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, gSpecular, 0);
 
 	//Debug
 	glGenTextures(1, &gDebug);
@@ -199,35 +228,21 @@ void DefferLightRender::SetMaterialUniforms()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	// - 告诉OpenGL我们将要使用(帧缓冲的)哪种颜色附件来进行渲染
-	GLuint attachments[4] = {
+	GLuint attachments[6] = {
 		GL_COLOR_ATTACHMENT0,
 		GL_COLOR_ATTACHMENT1,
 		GL_COLOR_ATTACHMENT2,
-		GL_COLOR_ATTACHMENT3
+		GL_COLOR_ATTACHMENT3,
+		GL_COLOR_ATTACHMENT4,
+		GL_COLOR_ATTACHMENT5
 	};
-	glDrawBuffers(4, attachments);
+	glDrawBuffers(6, attachments);
 
 #pragma endregion
 
 #pragma region 设置延迟渲染的光照阶段的uniform 属性
 	auto& progLight = AssetsManager::Instance()->programs["lightPass"];
 	progLight->Use();
-
-	//设置纹理插槽位置
-	glUniform1i(glGetUniformLocation(progLight->getID(), "gPosition"), 0);
-	glUniform1i(glGetUniformLocation(progLight->getID(), "gNormal"), 1);
-	glUniform1i(glGetUniformLocation(progLight->getID(), "gRoughness"), 2);
-	glUniform1i(glGetUniformLocation(progLight->getID(), "gMetalness"), 3);
-	glUniform1i(glGetUniformLocation(progLight->getID(), "gAbledo"), 4);
-	
-
-	//体素数据
-	glUniform1i(glGetUniformLocation(progLight->getID(), "voxelRadiance"), 5);
-	glUniform1i(glGetUniformLocation(progLight->getID(), "voxelNormal"), 6);
-	glUniform1i(glGetUniformLocation(progLight->getID(), "voxelIOR"), 7);
-	for (int i = 0; i < 6; i++) {
-		glUniform1i(glGetUniformLocation(progLight->getID(), ("voxelTexMipmap[" + to_string(i)+ "]").c_str()), 8+i);
-	}
 
 	if (quadVAO == 0)
 	{
@@ -246,7 +261,6 @@ void DefferLightRender::SetMaterialUniforms()
 #pragma endregion
 
 	//创建深度缓存
-	GLuint rboDepth;
 	glGenRenderbuffers(1, &rboDepth);
 	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 800, 600);
@@ -255,5 +269,4 @@ void DefferLightRender::SetMaterialUniforms()
 		std::cout << "Framebuffer not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 }

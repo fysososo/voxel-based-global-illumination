@@ -2,12 +2,15 @@
 #extension GL_ARB_shader_image_load_store : require
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
-layout(binding = 0, rgba8) uniform coherent image3D voxelAlbedo;
-layout(binding = 1, rgba8) uniform coherent image3D voxelNormal;
-layout(binding = 2, rgba8) uniform coherent image3D voxelEmisson;
-layout(binding = 3, rgba8) uniform coherent image3D voxelRoughness;
-layout(binding = 4, rgba8) uniform coherent image3D voxelMetalness;
-layout(binding = 5, rgba8) uniform coherent image3D voxelRadiance;
+layout(binding = 0) uniform sampler3D voxelAlbedo;
+layout(binding = 1, rgba8) uniform image3D voxelNormal;
+layout(binding = 2, rgba8) uniform image3D readonly voxelEmisson;
+layout(binding = 3) uniform sampler3D voxelRoughness;
+layout(binding = 4) uniform sampler3D voxelMetalness;
+
+layout(binding = 5, rgba8) uniform image3D writeonly voxelRadiance;
+//调试用缓存
+layout(binding = 6, rgba16f) uniform image3D debug_comp_injectRandiance;
 
 //计算宏
 const float PI = 3.14159265f;
@@ -17,13 +20,24 @@ const float SQRT_3 = 1.73205080f;
 //参数
 uniform vec3 viewPos;
 uniform float F0;
+uniform float traceShadowHit = 0.5f;
 
 //灯光
-struct Light {
-    vec3 position;
-	vec3 color;
-	float intensity;
+/*点光源衰减参数*/
+struct Attenuation
+{
+    float constant;
+    float linear;
+    float quadratic;
 };
+/*灯光结构体*/
+struct Light {
+    Attenuation attenuation;
+    vec3 diffuse;
+    vec3 direction;
+    vec3 position;
+};
+/*灯光信息*/
 const uint MAX_POINT_LIGHTS = 6;
 uniform Light pointLight[MAX_POINT_LIGHTS];
 uniform int lightCount;
@@ -42,7 +56,7 @@ float G_direct(vec3 N, vec3 I, float Roughness);
 float G_ibl(vec3 N, vec3 I, float Roughness);
 vec3 f_Specular(vec3 N,vec3 L,vec3 H, vec3 V, float Roughness, float metalness, vec3 F0);
 vec3 BRDF(vec3 albedo, vec3 N,vec3 L,vec3 H, vec3 V, float Roughness, float metalness, vec3 F0, float KD);
-vec3 BRDF_t(Light light, vec3 normal, vec3 albedo, vec3 direction);
+vec3 BRDF_t(Light light, vec3 normal, vec3 albedo);
 
 vec3 VoxelToWorld(ivec3 pos);
 vec3 WorldToVoxel(vec3 position);
@@ -59,22 +73,66 @@ void main()
 
 	ivec3 writePos = ivec3(gl_GlobalInvocationID);
 
-	vec4 result = vec4(0.0f);
+	vec4 albedo = texelFetch(voxelAlbedo, writePos, 0);
+    vec3 emission = imageLoad(voxelEmisson, writePos).rgb;
+    if(albedo.a < EPSILON) { return; }
+    albedo.a = 0.0f;
 
-	vec4 albedo = vec4(imageLoad(voxelAlbedo, writePos).xyz,1.0f);
-	vec3 baseNormal = DecodeNormal(imageLoad(voxelNormal, writePos).xyz);
-	vec4 emission = vec4(imageLoad(voxelEmisson, writePos).xyz, 1.0f);
-	float metalness = imageLoad(voxelMetalness, writePos).r;
-	float roughness = imageLoad(voxelRoughness, writePos).r;
-    vec3 wsPosition = VoxelToWorld(writePos);
-    //result = albedo;
-    result = CalculateDirectLighting(wsPosition, baseNormal, albedo.rgb, roughness, metalness);
+    vec3 normal = imageLoad(voxelNormal, writePos).xyz;
+    normal = DecodeNormal(normal);
 
-    result.rgb += emission.rgb;
-    result.a = 1.0f;
-
-	imageStore(voxelRadiance, writePos, result);
+    //不计算原本颜色就为零的部分
+    if(any(greaterThan(albedo.rgb, vec3(0.0f))))
+    {
+        //获取世界空间下体素的坐标
+        vec3 wsPosition = VoxelToWorld(writePos);
+        //将直接光照注入至体素中
+        float metalness = texelFetch(voxelMetalness, writePos, 0).r;
+	    float roughness = texelFetch(voxelRoughness, writePos, 0).r;
+        albedo = CalculateDirectLighting(wsPosition, normal, albedo.rgb, roughness, metalness);
+        albedo.a = 1.0f;
+    }
+    if(any(greaterThan(emission, vec3(0.0f)))){
+        albedo.rgb += emission.rgb;
+        albedo.a = 1.0f;
+    }
+	imageStore(voxelRadiance, writePos, albedo);
 }
+
+float TraceShadow(vec3 position, vec3 direction, float maxTracingDistance) 
+{
+    //阴影的尺寸因子
+    float k = traceShadowHit * traceShadowHit;
+    //一个voxel的在纹理坐标下的尺寸
+    float voxelTexSize = 1.0f / volumeDimension;
+    //向前移动避免自碰撞
+    float dst = voxelTexSize * 2.0f;
+    vec3 samplePos = direction * dst + position;
+    //最终结果
+    float visibility = 0.0f;
+    //追踪过程中的积累值
+    float traceSample = 0.0f;
+    
+    while (visibility <= 1.0f && dst <= maxTracingDistance) 
+    {
+        if (samplePos.x < 0.0f || samplePos.y < 0.0f || samplePos.z < 0.0f
+            || samplePos.x > 1.0f || samplePos.y > 1.0f || samplePos.z > 1.0f) 
+        { 
+            break; 
+        }
+        //采样
+        traceSample = ceil(texture(voxelAlbedo, samplePos).a) * k;
+        if(traceSample > 1.0f - EPSILON) { return 0.0f; }
+
+        //积累
+        visibility += (1.0f - visibility) * traceSample / dst;
+        //step
+        dst += voxelTexSize;
+        samplePos = direction * dst + position;
+    }
+    return 1.0f - visibility;
+}
+
 
 vec3 VoxelToWorld(ivec3 pos)
 {
@@ -129,38 +187,53 @@ vec3 BRDF(vec3 albedo, vec3 N,vec3 L,vec3 H, vec3 V, float roughness, float meta
 	return (KD*diff+(1-KD)*(1-metalness)*spec);
 }
 
-vec3 BRDF_t(Light light, vec3 normal, vec3 albedo, vec3 direction)
+vec3 BRDF_t(Light light, vec3 normal, vec3 albedo)
 {
     float nDotL = 0.0f;
     vec3 weight = normal * normal;
         
-    float rDotL = dot(vec3(1.0, 0.0, 0.0), direction);
-    float uDotL = dot(vec3(0.0, 1.0, 0.0), direction);
-    float fDotL = dot(vec3(0.0, 0.0, 1.0), direction);
+    float rDotL = dot(vec3(1.0, 0.0, 0.0), light.direction);
+    float uDotL = dot(vec3(0.0, 1.0, 0.0), light.direction);
+    float fDotL = dot(vec3(0.0, 0.0, 1.0), light.direction);
 
-        rDotL = normal.x > 0.0 ? max(rDotL, 0.0) : max(-rDotL, 0.0);
-        uDotL = normal.y > 0.0 ? max(uDotL, 0.0) : max(-uDotL, 0.0);
-        fDotL = normal.z > 0.0 ? max(fDotL, 0.0) : max(-fDotL, 0.0);
+    rDotL = normal.x > 0.0 ? max(rDotL, 0.0) : max(-rDotL, 0.0);
+    uDotL = normal.y > 0.0 ? max(uDotL, 0.0) : max(-uDotL, 0.0);
+    fDotL = normal.z > 0.0 ? max(fDotL, 0.0) : max(-fDotL, 0.0);
        
-        nDotL = rDotL * weight.x + uDotL * weight.y + fDotL * weight.z;
+    nDotL = rDotL * weight.x + uDotL * weight.y + fDotL * weight.z;
 
-    return albedo * nDotL;
+    return light.diffuse * albedo * nDotL;
 }
 
 vec4 CalculatePoint(Light light, vec3 normal, vec3 position, vec3 albedo, float roughness, float metalness)
 {
-	vec3 F = mix(vec3(F0), albedo.rgb, metalness);
-    float dis = length(light.position - position);
-    vec3 L = normalize(light.position - position);
-    vec3 V = normalize(viewPos - position);
-    vec3 H = normalize(L+V);
-    float visibility = 1.0f;
-    float attenuation = 1.0 / (dis * dis);
-	vec3 radiance = light.color * attenuation * light.intensity; 
+    light.direction = light.position - position;
+    float d = length(light.direction);
+    light.direction = normalize(light.direction);
+    
+    //点光源衰减
+    float falloff = 1.0f / (light.attenuation.constant + light.attenuation.linear * d
+                    + light.attenuation.quadratic * d * d + 1.0f);
+    if(falloff <= 0.0f) return vec4(0.0f);
+
+    //计算contraceShadow生成的可视度
+    vec3 voxelPos = WorldToVoxel(position);
+    vec3 lightPosT = WorldToVoxel(light.position);
+    vec3 lightDirT = lightPosT.xyz - voxelPos.xyz;
+    float dT = length(lightDirT);
+    lightDirT = normalize(lightDirT);
+    float visibility = TraceShadow(voxelPos, lightDirT, dT);
+    
+    imageStore(debug_comp_injectRandiance, ivec3(gl_GlobalInvocationID), vec4(visibility));
+    //注意处理负值
+    if(visibility <= 0.0f) return vec4(0.0f);
+    //计算BRDF
+    //vec3 brdf = BRDF(albedo.rgb, normal, L, H, V, roughness, metalness, F, 0.4f)*max(dot(normal, L),0.0f);
+    vec3 brdf = BRDF_t(light, normal, albedo.rgb);
     return vec4(
-		BRDF(albedo.rgb, normal, L, H, V, roughness, metalness, F, 0.4f)
-		*max(dot(normal, L),0.0f)
-        *radiance
+		brdf
+        *visibility
+        *falloff
 		, visibility);
 }
 
@@ -168,21 +241,21 @@ vec4 CalculatePoint(Light light, vec3 normal, vec3 position, vec3 albedo, float 
 vec4 CalculateDirectLighting(vec3 position, vec3 normal, vec3 albedo, float roughness, float metalness)
 {
     normal = normalize(normal);
-    // world space grid voxel size
+    //世界坐标下的体素尺寸
     float voxelWorldSize = 1.0 /  (voxelScale * volumeDimension);
-    // calculate directional lighting
-    vec4 directLighting = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-    vec4 current =  vec4(0.0f); 
-	int count = 0;
-
-    // calculate lighting for point lights
+    //辅助用变量
+    vec4 directLighting = vec4(0.0f);
+    vec4 current =  vec4(0.0f);int count = 0;
+    //先沿法线移动一定距离，防止阴影错位
+    position = position + normal * voxelWorldSize * 0.5f;
+    //接着计算此处体素颜色，rgb为颜色，a为该体素的可视度
     for(int i = 0; i < lightCount; ++i)
     {
         current = CalculatePoint(pointLight[i], normal, position, albedo, roughness, metalness);
         directLighting.rgb += current.rgb;
+        directLighting.a += current.a; count++;
     }
-
-
+    if(count > 0) { directLighting.a /= count; }
     return directLighting;
 }
 
