@@ -21,6 +21,7 @@ private:
 public:
 	virtual void Render() override;
 	virtual void SetMaterialUniforms() override;
+	void DrawVoxel(VoxelMapType voxelMapType);
 	VoxelizationRenderer();
 	GLuint albedo;//储存体素颜色的3D纹理
 	GLuint normal;//储存体素法线的3D纹理

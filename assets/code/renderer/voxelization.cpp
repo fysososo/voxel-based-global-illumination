@@ -15,11 +15,6 @@ void VoxelizationRenderer::Render()
 	//生成mipmap
 	GenerateMipmapFirst(voxelRadiance);
 	GenerateMipmapOthers();
-
-	////开启通道写入
-	//glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	//glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
 }
 
 void VoxelizationRenderer::SetMaterialUniforms()
@@ -39,9 +34,6 @@ void VoxelizationRenderer::SetMaterialUniforms()
 		sceneBoundingBox.MaxPoint.y = glm::max(boundingBox.MaxPoint.y, sceneBoundingBox.MaxPoint.y);
 		sceneBoundingBox.MaxPoint.z = glm::min(boundingBox.MaxPoint.z, sceneBoundingBox.MaxPoint.z);
 	}
-	//场景包围盒稍稍向外扩展
-	//sceneBoundingBox.MinPoint -= (sceneBoundingBox.Size * 0.1f);
-	//sceneBoundingBox.MaxPoint += (sceneBoundingBox.Size * 0.1f);
 
 	//计算出其他参数
 	sceneBoundingBox.Size = sceneBoundingBox.MaxPoint - sceneBoundingBox.MinPoint;
@@ -70,7 +62,6 @@ void VoxelizationRenderer::SetMaterialUniforms()
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-
 	//使用体素化着色器程序
 	auto& prog = AssetsManager::Instance()->programs["Voxelization"];
 	prog->Use();
@@ -91,7 +82,6 @@ void VoxelizationRenderer::SetMaterialUniforms()
 	glClearTexImage(voxelRadiance, 0, GL_RGBA, GL_FLOAT, zero);
 	glClearTexImage(debug_comp, 0, GL_RGBA, GL_FLOAT, zero);
 	glClearTexImage(debug_comp_injectRadiance, 0, GL_RGBA, GL_FLOAT, zero);
-
 
 	//绑定体素化对象
 	glBindImageTexture(0, albedo, 0, GL_TRUE, 0, GL_READ_WRITE, GL_R32UI);
@@ -146,12 +136,12 @@ void VoxelizationRenderer::SetMVP_freeMove(shared_ptr<Program> prog)
 	//传递projection矩阵
 	GLint width, height;
 	glfwGetWindowSize(Engine::Instance()->Window(), &width, &height);
-	glm::mat4 projectionM = glm::perspective(glm::radians(Camera::Active()->Zoom), (float)width / (float)height, 0.1f, 100.0f);
-	prog->setMat4("projection", projectionM);
+	glm::mat4 projectionM = glm::perspective(glm::radians(Camera::Active()->Zoom), (float)width / (float)height, 0.1f, 1000.0f);
+	prog->setMat4("matrices.projection", projectionM);
 
 	//传递view矩阵
 	glm::mat4 viewM = Camera::Active()->GetViewMatrix();
-	prog->setMat4("view", viewM);
+	prog->setMat4("matrices.view", viewM);
 }
 
 void VoxelizationRenderer::SetMVP_ortho(shared_ptr<Program> prog, BoundingBox& boundingBox)
@@ -433,6 +423,62 @@ void VoxelizationRenderer::RadiancePropagation()
 	auto workGroups = static_cast<unsigned int>(ceil(dimension / 8));
 	glDispatchCompute(workGroups, workGroups, workGroups);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT);
+}
+
+void VoxelizationRenderer::DrawVoxel(VoxelMapType voxelMapType)
+{
+	//清空并绑定纹理
+	static GLfloat zero[] = { 0, 0, 0, 0 };
+	glClearTexImage(debug_comp, 0, GL_RGBA, GL_FLOAT, zero);
+
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);//设置清屏颜色
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//清空颜色缓存和深度缓存
+
+	//设置渲染目标为窗口
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CCW);
+
+	GLint width, height;
+	glfwGetWindowSize(Engine::Instance()->Window(), &width, &height);
+	glViewport(0, 0, width, height);
+
+	auto& progDrawVoxel = AssetsManager::Instance()->programs["DrawVoxel"];
+	progDrawVoxel->Use();
+
+	//绑定debug缓存
+	glBindImageTexture(1, debug_comp, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA16F);
+
+	SetMVP_freeMove(progDrawVoxel);
+	progDrawVoxel->setFloat("voxelSize", voxelSize);
+	progDrawVoxel->setInt("dimension", dimension);
+	progDrawVoxel->setVec3("boxMin", sceneBoundingBox.MinPoint);
+
+	int mipLevel = 2;
+	progDrawVoxel->setInt("mipLevel", mipLevel);
+
+	glActiveTexture(GL_TEXTURE0);
+	switch (voxelMapType)
+	{
+	case RADIANCE:
+		glBindTexture(GL_TEXTURE_3D, voxelRadiance);
+		break;
+	case MIPMAP:
+		progDrawVoxel->setInt("dimension", dimension / (mipLevel + 1));
+		glBindTexture(GL_TEXTURE_3D, voxelAnisoMipmap[3]);
+		break;
+	case ALBEDO:
+		glBindTexture(GL_TEXTURE_3D, albedo);
+		break;
+	}
+
+	//走过场,只是为了传输顶点索引，其实全由几何着色器绘制
+	glBindVertexArray(VAO_drawVoxel);
+	glDrawArrays(GL_POINTS, 0, (dimension / (mipLevel + 1)) * (dimension / (mipLevel + 1)) * (dimension / (mipLevel + 1)));
+	glBindVertexArray(0);
 }
 
 void VoxelizationRenderer::setModelMat(shared_ptr<Program> prog, shared_ptr<Model> model)

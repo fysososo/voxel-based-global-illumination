@@ -1,10 +1,10 @@
 #version 450 core
 
 out vec4 albedo;
-layout(binding = 0, rgba8) uniform readonly image3D texture_albedo;
+layout(binding = 0) uniform sampler3D voxelImage;
 
-uniform uint dimension;
-
+uniform int dimension;
+uniform int mipLevel;
 
 void main()
 {
@@ -16,8 +16,7 @@ void main()
 	);
 
 	ivec3 texPos = ivec3(position);
-	albedo = imageLoad(texture_albedo, texPos);
-
+	albedo = texelFetch(voxelImage, texPos, mipLevel);
 
 	gl_Position = vec4(position, 1.0f);
 }

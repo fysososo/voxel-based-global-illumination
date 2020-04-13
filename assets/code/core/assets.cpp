@@ -24,12 +24,13 @@ AssetsManager::AssetsManager()
 	cameras["FPS"]->SetAsActive();//激活
 
 	//加载灯光
-	pointLights.push_back(make_shared<Pointlight>(glm::vec3(0.0f, 15.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(30.0f, 30.0f,30.0f)));
+	pointLights.push_back(make_shared<Pointlight>(glm::vec3(0.0f, 15.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(15.0f, 15.0f, 15.0f)));
 	//pointLights.push_back(make_shared<Pointlight>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(15.0f, 15.0f, 15.0f)));
 	//加载模型
 	//models["sphere1"] = make_shared<Model>("assets/model/sphere/sphere.obj", glm::vec3(-1.5f,5.0f,3.0f));
 	//models["sphere2"] = make_shared<Model>("assets/model/sphere/sphere.obj", glm::vec3(1.5f,0.0f,3.0f));
-	models["cornell"] = make_shared<Model>("assets/model/cornell-box/cornell_box_EMPTY.obj", glm::vec3(0.0f, 0.0f, 0.0f));
+	//models["cornell"] = make_shared<Model>("assets/model/cornell-box/cornell_box_EMPTY.obj", glm::vec3(0.0f, 0.0f, 0.0f));
+	//models["box"] = make_shared<Model>("assets/model/box/box.obj", glm::vec3(0.0f, 4.0f, 0.0f));
 	models["cornell"] = make_shared<Model>("assets/model/cornell-box-notEmpty/cornell_box.obj", glm::vec3(0.0f, 0.0f, 0.0f));
 
 	programs["Voxelization"] = make_shared<Program>();
@@ -54,6 +55,12 @@ AssetsManager::AssetsManager()
 	programs["lightPass"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/lightPass.vert");
 	programs["lightPass"]->AttachShader(GL_FRAGMENT_SHADER, "assets/code/shader/lightPass.frag");
 	
+	programs["DrawVoxel"] = make_shared<Program>();
+	programs["DrawVoxel"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/drawVoxel.vert");
+	programs["DrawVoxel"]->AttachShader(GL_GEOMETRY_SHADER, "assets/code/shader/drawVoxel.geom");
+	programs["DrawVoxel"]->AttachShader(GL_FRAGMENT_SHADER, "assets/code/shader/drawVoxel.frag");
+
+
 	programs["anisoMipmapFirst"] = make_shared<Program>();
 	programs["anisoMipmapFirst"]->AttachShader(GL_COMPUTE_SHADER, "assets/code/shader/anisoMipmapFirst.comp");
 

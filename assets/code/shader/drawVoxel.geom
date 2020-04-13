@@ -6,9 +6,12 @@ layout(points) in;
 layout(triangle_strip, max_vertices = 24) out;
 
 //MVPæÿ’Û
-uniform mat4 view;
-uniform mat4 projection;
-uniform mat4 model;
+uniform struct Matrices
+{
+	mat4 view;
+    mat4 model;
+	mat4 projection;
+} matrices;
 
 uniform float voxelSize;
 uniform vec3 boxMin;
@@ -85,7 +88,7 @@ void main()
 	for(int i = 0; i < 8; i++)
 	{
 		vec4 vertex = gl_in[0].gl_Position + cubeVertices[i];
-		projectedVertices[i] = projection * view * model * vertex;
+		projectedVertices[i] = matrices.projection * matrices.view * vertex;
 	}
 
 	//ªÊ÷∆Õº‘™

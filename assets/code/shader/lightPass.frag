@@ -181,7 +181,13 @@ void main(){
     //×ª»»ÖÁgamma¿Õ¼ä
      compositeLighting = pow(compositeLighting, vec3(1.0 / gamma));
 
-    fragColor = vec4(compositeLighting, 1.0f);
+     if(showMode == 4){
+        vec3 voxelPositon = WorldToVoxel(pos);
+        fragColor = vec4(texture(voxelRadiance, voxelPositon).rgb, 1.0f);
+     }
+     else{
+        fragColor = vec4(compositeLighting, 1.0f);
+     }
 }
 
 vec3 CalculateDirectLighting(vec3 position, vec3 normal, vec3 albedo, vec4 specular){

@@ -1,6 +1,7 @@
 #pragma once
 #include <stdafx.h>
 #include "../renderer/DefferLightRenderer.h"
+#include "../renderer/voxelization.h"
 
 class Engine
 {

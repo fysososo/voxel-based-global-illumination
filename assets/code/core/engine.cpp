@@ -201,9 +201,11 @@ void Engine::RenderLoop()
 		if (processInput(window)) {
 			AssetsManager::Instance()->renderers["Voxelization"]->Render();
 		}
-		//AssetsManager::Instance()->renderers["Voxelization"]->Render();
+
 		AssetsManager::Instance()->renderers["DefferLight"]->Render();
-		
+		//static_cast<VoxelizationRenderer*>(AssetsManager::Instance()->renderers["Voxelization"].get())->DrawVoxel(RADIANCE);
+		//static_cast<VoxelizationRenderer*>(AssetsManager::Instance()->renderers["Voxelization"].get())->DrawVoxel(MIPMAP);
+
 		glfwSwapBuffers(window);//交换颜色缓冲
 		glfwPollEvents();//检查是否触发事件，并调用已注册的对应的回调函数
 

@@ -25,6 +25,12 @@
 #include <memory>
 using namespace std;
 
+//自定义枚举值
+enum VoxelMapType {
+	RADIANCE = 0,
+	MIPMAP,
+	ALBEDO
+};
 
 //自定义结构
 struct Texture
