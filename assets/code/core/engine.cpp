@@ -160,26 +160,37 @@ bool Engine::processInput(GLFWwindow* window)
 		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
 		progLight->Use();
 		progLight->setInt("showMode", 0);
+		cout << "*********渲染模式更改为：间接光+直接光+阴影+遮罩**********" << endl;
 	}
 	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
 		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
 		progLight->Use();
 		progLight->setInt("showMode", 1);
+		cout << "*********渲染模式更改为：直接光**********" << endl;
 	}	
 	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
 		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
 		progLight->Use();
 		progLight->setInt("showMode", 2);
+		cout << "*********渲染模式更改为：阴影**********" << endl;
 	}	
 	if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
 		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
 		progLight->Use();
 		progLight->setInt("showMode", 3);
+		cout << "*********渲染模式更改为：遮罩**********" << endl;
 	}
 	if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
 		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
 		progLight->Use();
 		progLight->setInt("showMode", 4);
+		cout << "*********渲染模式更改为：间接光**********" << endl;
+	}
+	if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
+		auto& progLight = AssetsManager::Instance()->programs["lightPass"];
+		progLight->Use();
+		progLight->setInt("showMode", 5);
+		cout << "*********渲染模式更改为：体素信息**********" << endl;
 	}
 
 	return renderStateChange;
@@ -189,8 +200,14 @@ void Engine::RenderLoop()
 {
 	AssetsManager::Instance()->renderers["DefferLight"]->SetMaterialUniforms();
 	AssetsManager::Instance()->renderers["Voxelization"]->SetMaterialUniforms();
-	AssetsManager::Instance()->renderers["Voxelization"]->Render();
+	auto voxelRender = static_cast<VoxelizationRenderer*>(AssetsManager::Instance()->renderers["Voxelization"].get());
 
+	GLfloat lastFuncRunTime = glfwGetTime();
+	voxelRender->GenerateVoxelData();
+	voxelRender->Render();
+	GLfloat currentFuncRunTime = glfwGetTime();
+	cout << "体素数据渲染时间：" << currentFuncRunTime - lastFuncRunTime << endl;
+	cout << "************渲染开始**************" << endl;
 	while (!glfwWindowShouldClose(window))
 	{
 		//计算每帧的间隔时间
@@ -208,7 +225,11 @@ void Engine::RenderLoop()
 
 		glfwSwapBuffers(window);//交换颜色缓冲
 		glfwPollEvents();//检查是否触发事件，并调用已注册的对应的回调函数
-
+		GLfloat endFrame = glfwGetTime();
+		
+		if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+			cout << "*********本帧渲染时间：" << endFrame - currentFrame << "**********" << endl;
+		}
 	}
 }
 

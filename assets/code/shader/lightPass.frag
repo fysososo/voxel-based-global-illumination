@@ -145,33 +145,32 @@ void main(){
 	vec3 V = normalize(viewPos - pos);
 	vec3 N = normalize(texture(gNormal, TexCoord).xyz);
     //计算直接光照
-	vec4 directLight = vec4(0.0f);
-	directLight.rgb = CalculateDirectLighting(pos, N, albedo, specular);
-    vec4 directLightWithoutShadow = directLight;
+	vec3 directLight = vec3(0.0f);
+	directLight = CalculateDirectLighting(pos, N, albedo, specular);
     //计算间接光照
 	vec4 indirectLighting = CalculateIndirectLighting(pos,N,albedo.rgb,specular, true);
-	indirectLighting.rgb = pow(indirectLighting.rgb, vec3(2.2f));
+    indirectLighting.rgb = pow(indirectLighting.rgb, vec3(2.2f));
     //组合后的结果
     vec3 compositeLighting;
     if(showMode == 0){
-        //间接光+直接光+阴影
-	    compositeLighting = (directLight.rgb + indirectLighting.rgb)*indirectLighting.a;
+        //间接光+直接光+阴影+遮罩
+	    compositeLighting = (directLight + indirectLighting.rgb) * indirectLighting.a;
     }
     else if(showMode == 1){
-        //直接光+阴影
-	    compositeLighting = directLight.rgb;
+        //直接光
+	    compositeLighting = directLight;
     }
     else if(showMode == 2){
-        //间接光+直接光
-	    compositeLighting = (directLightWithoutShadow.rgb + indirectLighting.rgb);
+        //阴影
+	    compositeLighting = directLight;
     }
     else if(showMode == 3){
+        //遮罩
+        compositeLighting = vec3(indirectLighting.a);
+    }
+    else if(showMode == 4){
         //间接光
         compositeLighting = indirectLighting.rgb;
-    }
-    else{
-        //直接光
-        compositeLighting = directLightWithoutShadow.rgb;
     }
     //组合自发光
     compositeLighting.rgb += emission.rgb;
@@ -181,7 +180,7 @@ void main(){
     //转换至gamma空间
      compositeLighting = pow(compositeLighting, vec3(1.0 / gamma));
 
-     if(showMode == 4){
+     if(showMode == 5){
         vec3 voxelPositon = WorldToVoxel(pos);
         fragColor = vec4(texture(voxelRadiance, voxelPositon).rgb, 1.0f);
      }
@@ -199,11 +198,9 @@ vec3 CalculateDirectLighting(vec3 position, vec3 normal, vec3 albedo, vec4 specu
     {
         directLighting += CalculatePoint(pointLight[i], normal, position, 
                                    albedo, specular);
-        directLighting += Ambient(pointLight[i], albedo);
+        directLighting.rgb += Ambient(pointLight[i], albedo);
     }
-
     return directLighting;
-
 }
 
 vec3 CalculatePoint(Light light, vec3 normal, vec3 position, vec3 albedo, vec4 specular)
@@ -213,60 +210,29 @@ vec3 CalculatePoint(Light light, vec3 normal, vec3 position, vec3 albedo, vec4 s
     light.direction = normalize(light.direction);
     float falloff = 1.0f / (light.attenuation.constant + light.attenuation.linear * d
                     + light.attenuation.quadratic * d * d + 1.0f);
-
     if(falloff <= 0.0f) return vec3(0.0f);
 
     float visibility = 1.0f;
-    visibility = max(0.0f, TraceShadowCone(position, light.direction, coneShadowAperture, d));
-
-
+    if(showMode == 0 || showMode == 2){
+        visibility = max(0.0f, TraceShadowCone(position, light.direction, coneShadowAperture, d));
+    }
     if(visibility <= 0.0f) return vec3(0.0f);  
 
-    return BRDF_t(light, normal, position, albedo, specular) * falloff * visibility;
+    
+    if(showMode == 0){
+        return vec3(BRDF_t(light, normal, position, albedo, specular) * falloff * visibility);
+    }
+    else if(showMode == 1){
+        return vec3(BRDF_t(light, normal, position, albedo, specular) * falloff);
+    }
+    else{
+        return vec3(visibility);
+    }
 }
 
 vec3 Ambient(Light light, vec3 albedo)
 {
     return max(albedo * light.ambient, 0.0f);
-}
-
-vec3 F(vec3 H, vec3 V, vec3 F0){
-	return F0 + (1-F0)*pow(1-max(dot(H, V), 0.0), 5);
-}
-
-float G_direct(vec3 N, vec3 I, float Roughness){
-	float NI = max(dot(N,I),0);
-	float k = pow(Roughness+1.0f,2)/8.0f;
-	return NI/(NI*(1-k)+k);
-}
-
-float G_ibl(vec3 N, vec3 I, float Roughness){
-	float NI = max(dot(N,I),0);
-	float alpha = Roughness*Roughness;
-	float R_2 = alpha*alpha;
-	float k = R_2/8.0f;
-	return NI/(NI*(1-k)+k);
-}
-
-vec3 f_Specular(vec3 N,vec3 L,vec3 H, vec3 V, float Roughness, float metalness, vec3 F0){
-	float NV = max(dot(V,N), 0);
-	float NL = max(dot(L,N),0);
-	return (D(N,H,Roughness)*F(H,V,F0)*G_direct(N,L,Roughness)*G_direct(N,V,Roughness))/(4.0f*NV*NL + 0.001f);
-}
-
-
-float D(vec3 N, vec3 H, float Roughness){
-	float NH = max(dot(N,H),0);
-	float alpha = Roughness*Roughness;
-	float R_2 = alpha*alpha;
-	float denominator = NH*NH * (R_2 - 1) + 1;
-	return R_2/(PI * denominator * denominator);
-}
-
-vec3 BRDF(vec3 albedo, vec3 N,vec3 L,vec3 H, vec3 V, float roughness, float metalness, vec3 F, float KD){
-	vec3 diff = albedo/PI;
-	vec3 spec = f_Specular(N, L, H, V, roughness, metalness, F);
-	return (KD*diff+(1-KD)*(1-metalness)*spec);
 }
 
 vec3 BRDF_t(Light light, vec3 N, vec3 X, vec3 ka, vec4 ks)
@@ -361,10 +327,6 @@ float TraceShadowCone(vec3 position, vec3 direction, float aperture, float maxTr
     while(visibility < 1.0f && dst <= maxDistance)
     {
         vec3 conePosition = startPosition + direction * dst;
-//        if(conePosition.x > worldMaxPoint.x || conePosition.y > worldMaxPoint.y || conePosition.z > worldMaxPoint.z
-//            || conePosition.x < worldMinPoint.x || conePosition.y < worldMinPoint.y || conePosition.z < worldMinPoint.z){
-//            break;
-//        }
         float diameter = 2.0f * aperture * dst;
         float mipLevel = log2(diameter / voxelWorldSize);
         //转换至纹理坐标空间
@@ -382,7 +344,6 @@ float TraceShadowCone(vec3 position, vec3 direction, float aperture, float maxTr
     return 1.0f - visibility;
 }
 
-int temp;
 vec4 TraceCone(vec3 position, vec3 normal, vec3 direction, float aperture, bool traceOcclusion)
 {
     uvec3 visibleFace;
@@ -413,10 +374,6 @@ vec4 TraceCone(vec3 position, vec3 normal, vec3 direction, float aperture, bool 
     while(coneSample.a < 1.0f && dst <= maxDistance)
     {
         vec3 conePosition = startPosition + direction * dst;
-//        if(conePosition.x > worldMaxPoint.x || conePosition.y > worldMaxPoint.y || conePosition.z > worldMaxPoint.z
-//            || conePosition.x < worldMinPoint.x || conePosition.y < worldMinPoint.y || conePosition.z < worldMinPoint.z){
-//            break;
-//        }
         //计算mipmap
         float diameter = 2.0f * aperture * dst;
         float mipLevel = log2(diameter / voxelWorldSize);
@@ -426,7 +383,7 @@ vec4 TraceCone(vec3 position, vec3 normal, vec3 direction, float aperture, bool 
         vec4 anisoSample = AnistropicSample(coord, weight, visibleFace, mipLevel);
         //积累
         coneSample += (1.0f - coneSample.a) * anisoSample;
-        //全局遮罩
+            //全局遮罩
         if(traceOcclusion && occlusion < 1.0)
         {
             occlusion += ((1.0f - occlusion) * anisoSample.a) / (1.0f + falloff * diameter);
@@ -434,7 +391,6 @@ vec4 TraceCone(vec3 position, vec3 normal, vec3 direction, float aperture, bool 
         //step
         dst += diameter * samplingFactor;
     }
-    
     return vec4(coneSample.rgb, occlusion);
 }
 

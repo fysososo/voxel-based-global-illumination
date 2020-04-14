@@ -17,20 +17,21 @@ private:
 	void GenerateMipmapFirst(GLuint baseTexture);
 	void InjectRadiance();
 	void RadiancePropagation();
+	void CalculateSceneBondingBox();
 
 public:
 	virtual void Render() override;
 	virtual void SetMaterialUniforms() override;
+
 	void DrawVoxel(VoxelMapType voxelMapType);
+	void GenerateVoxelData();
+
 	VoxelizationRenderer();
 	GLuint albedo;//储存体素颜色的3D纹理
 	GLuint normal;//储存体素法线的3D纹理
 	GLuint emission;//储存体素自发光的3D纹理
 	GLuint radiance;//储存体素辐照度的3D纹理
-	GLuint roughness;//储存体素粗糙度的3D纹理
-	GLuint metalness;//储存体素金属度的3D纹理
-	GLuint debug_comp;//調試用
-	GLuint debug_comp_injectRadiance;//調試用
+	GLuint debug_comp;//调试用缓存
 
 	GLuint voxelRadiance;
 	std::array<GLuint, 6> voxelAnisoMipmap;

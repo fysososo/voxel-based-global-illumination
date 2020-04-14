@@ -3,14 +3,10 @@
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
 layout(binding = 0) uniform sampler3D voxelAlbedo;
-layout(binding = 1, rgba8) uniform image3D voxelNormal;
-layout(binding = 2, rgba8) uniform image3D readonly voxelEmisson;
-layout(binding = 3) uniform sampler3D voxelRoughness;
-layout(binding = 4) uniform sampler3D voxelMetalness;
 
-layout(binding = 5, rgba8) uniform image3D writeonly voxelRadiance;
-//调试用缓存
-layout(binding = 6, rgba16f) uniform image3D debug_comp_injectRandiance;
+layout(binding = 0, rgba8) uniform image3D voxelNormal;
+layout(binding = 1, rgba8) uniform image3D readonly voxelEmisson;
+layout(binding = 2, rgba8) uniform image3D writeonly voxelRadiance;
 
 //计算宏
 const float PI = 3.14159265f;
@@ -60,8 +56,8 @@ vec3 BRDF_t(Light light, vec3 normal, vec3 albedo);
 
 vec3 VoxelToWorld(ivec3 pos);
 vec3 WorldToVoxel(vec3 position);
-vec4 CalculatePoint(Light light, vec3 normal, vec3 position, vec3 albedo, float roughness, float metalness);
-vec4 CalculateDirectLighting(vec3 position, vec3 normal, vec3 albedo, float roughness, float metalness);
+vec4 CalculatePoint(Light light, vec3 normal, vec3 position, vec3 albedo);
+vec4 CalculateDirectLighting(vec3 position, vec3 normal, vec3 albedo);
 vec3 EncodeNormal(vec3 normal);
 vec3 DecodeNormal(vec3 normal);
 
@@ -87,9 +83,7 @@ void main()
         //获取世界空间下体素的坐标
         vec3 wsPosition = VoxelToWorld(writePos);
         //将直接光照注入至体素中
-        float metalness = texelFetch(voxelMetalness, writePos, 0).r;
-	    float roughness = texelFetch(voxelRoughness, writePos, 0).r;
-        albedo = CalculateDirectLighting(wsPosition, normal, albedo.rgb, roughness, metalness);
+        albedo = CalculateDirectLighting(wsPosition, normal, albedo.rgb);
         albedo.a = 1.0f;
     }
     if(any(greaterThan(emission, vec3(0.0f)))){
@@ -205,7 +199,7 @@ vec3 BRDF_t(Light light, vec3 normal, vec3 albedo)
     return light.diffuse * albedo * nDotL;
 }
 
-vec4 CalculatePoint(Light light, vec3 normal, vec3 position, vec3 albedo, float roughness, float metalness)
+vec4 CalculatePoint(Light light, vec3 normal, vec3 position, vec3 albedo)
 {
     light.direction = light.position - position;
     float d = length(light.direction);
@@ -223,8 +217,6 @@ vec4 CalculatePoint(Light light, vec3 normal, vec3 position, vec3 albedo, float 
     float dT = length(lightDirT);
     lightDirT = normalize(lightDirT);
     float visibility = TraceShadow(voxelPos, lightDirT, dT);
-    
-    imageStore(debug_comp_injectRandiance, ivec3(gl_GlobalInvocationID), vec4(visibility));
     //注意处理负值
     if(visibility <= 0.0f) return vec4(0.0f);
     //计算BRDF
@@ -238,7 +230,7 @@ vec4 CalculatePoint(Light light, vec3 normal, vec3 position, vec3 albedo, float 
 }
 
 
-vec4 CalculateDirectLighting(vec3 position, vec3 normal, vec3 albedo, float roughness, float metalness)
+vec4 CalculateDirectLighting(vec3 position, vec3 normal, vec3 albedo)
 {
     normal = normalize(normal);
     //世界坐标下的体素尺寸
@@ -251,7 +243,7 @@ vec4 CalculateDirectLighting(vec3 position, vec3 normal, vec3 albedo, float roug
     //接着计算此处体素颜色，rgb为颜色，a为该体素的可视度
     for(int i = 0; i < lightCount; ++i)
     {
-        current = CalculatePoint(pointLight[i], normal, position, albedo, roughness, metalness);
+        current = CalculatePoint(pointLight[i], normal, position, albedo);
         directLighting.rgb += current.rgb;
         directLighting.a += current.a; count++;
     }

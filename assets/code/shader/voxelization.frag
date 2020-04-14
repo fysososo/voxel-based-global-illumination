@@ -14,27 +14,17 @@ out vec4 fragColor;
 layout(binding = 0, r32ui)  uniform volatile coherent uimage3D texture_albedo;
 layout(binding = 1, r32ui)  uniform volatile coherent uimage3D texture_normal;
 layout(binding = 2, r32ui)  uniform volatile coherent uimage3D texture_emission;
-layout(binding = 3, r32ui)  uniform volatile coherent uimage3D texture_roughness;
-layout(binding = 4, r32ui)  uniform volatile coherent uimage3D texture_metalness;
 
 uniform bool hasAlbedoMap;
-uniform sampler2D AlbedoMap;
-uniform vec3 albedo;
-
 uniform bool hasNormalMap;
-uniform sampler2D NormalMap;
-
 uniform bool hasEmissionMap;
-uniform sampler2D EmissionMap;
+
+layout(binding = 0) uniform sampler2D AlbedoMap;
+layout(binding = 1) uniform sampler2D EmissionMap;
+layout(binding = 2) uniform sampler2D NormalMap;
+
+uniform vec3 albedo;
 uniform vec3 emission;
-
-uniform bool hasRoughnessMap;
-uniform sampler2D RoughnessMap;
-uniform float roughness;
-
-uniform bool hasMetalnessMap;
-uniform sampler2D MetalnessMap;
-uniform float metalness;
 
 //32uint-->vec4
 vec4 convRGBA8ToVec4(uint val)
@@ -121,23 +111,4 @@ void main()
 		emissionData = vec4(emission, 1.0f);
 	}
 	imageAtomicRGBA8Avg(texture_emission, iposition, vec4(emissionData.xyz,1.0f));
-
-	//体素化粗超度
-	vec4 roughnessData;
-	if(hasRoughnessMap){
-		roughnessData = texture(RoughnessMap, In.texCoord) + vec4(roughness);
-	}else{
-		roughnessData = vec4(roughness);
-	}
-	imageAtomicRGBA8Avg(texture_roughness, iposition, vec4(vec3(roughnessData.r),1.0f));
-	
-	//体素化金属度vec4 roughnessData;
-	vec4 metalnessData;
-	if(hasMetalnessMap){
-		metalnessData = texture(MetalnessMap, In.texCoord) + vec4(metalness);
-	}else{
-		roughnessData = vec4(roughness);
-	}
-	imageAtomicRGBA8Avg(texture_metalness, iposition, vec4(vec3(metalnessData.r),1.0f));
-	
 }
