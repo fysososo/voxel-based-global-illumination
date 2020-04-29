@@ -1,6 +1,5 @@
 #pragma once
 #include<stdafx.h>
-#include"../scene/material.h"
 class Renderer : public SingleActive <Renderer>
 {
 public:

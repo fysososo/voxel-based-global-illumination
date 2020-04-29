@@ -164,7 +164,6 @@
     <ClCompile Include="assets\code\core\main.cpp" />
     <ClCompile Include="assets\code\scene\model.cpp" />
     <ClCompile Include="assets\code\scene\mesh.cpp" />
-    <ClCompile Include="assets\code\scene\material.cpp" />
     <ClCompile Include="assets\code\scene\camera.cpp" />
     <ClCompile Include="include\stdafx.cpp" />
   </ItemGroup>
@@ -180,7 +179,6 @@
     <ClInclude Include="assets\code\support\stb_image.h" />
     <ClInclude Include="assets\code\scene\model.h" />
     <ClInclude Include="assets\code\scene\mesh.h" />
-    <ClInclude Include="assets\code\scene\material.h" />
     <ClInclude Include="assets\code\scene\camera.h" />
     <ClInclude Include="include\stdafx.h" />
   </ItemGroup>

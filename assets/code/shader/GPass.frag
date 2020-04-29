@@ -8,33 +8,23 @@ in mat3 TBN;
 layout (location = 0) out vec3 gPosition;
 layout (location = 1) out vec3 gNormal;
 layout (location = 2) out vec3 gAlbedo;
-layout (location = 3) out vec4 gRoughness;
-layout (location = 4) out vec4 gEmission;
-layout (location = 5) out vec4 gSpecular;
+layout (location = 3) out vec4 gEmission;
+layout (location = 4) out vec4 gSpecular;
 
 layout (location = 0) uniform sampler2D NormalMap;
 layout (location = 1) uniform sampler2D AlbedoMap;
-layout (location = 2) uniform sampler2D RoughnessMap;
-layout (location = 3) uniform sampler2D MetalnessMap;
-layout (location = 4) uniform sampler2D EmissionMap;
-layout (location = 5) uniform sampler2D SpecularMap;
+layout (location = 2) uniform sampler2D EmissionMap;
+layout (location = 3) uniform sampler2D SpecularMap;
 
-uniform bool hasNormalMap;
-uniform bool hasAlbedoMap;
-uniform bool hasRoughnessMap;
-uniform bool hasMetalnessMap;
-uniform bool hasEmissionMap;
-uniform bool hasSpecularMap;
+uniform bool hasNormalMap = false;
+uniform bool hasAlbedoMap = false;
+uniform bool hasEmissionMap = false;
+uniform bool hasSpecularMap = false;
 
-uniform float metalness;
-uniform float roughness;
-uniform float shininess;
 uniform vec3 albedo;
 uniform vec3 emission;
 uniform vec3 specular;
-uniform float F0;
-uniform float IOR;
-uniform float KD;
+uniform float shininess;
 
 vec3 EncodeNormal(vec3 normal)
 {
@@ -80,15 +70,6 @@ void main(){
 		gAlbedo = albedo;
 	}
 	
-	//金属度
-	if(hasMetalnessMap){
-		lowp vec4 _metalness = texture(MetalnessMap, TexCoord);
-		gRoughness.g = _metalness.r;
-	}
-	else{
-		gRoughness.g = metalness;
-	}
-
 	//镜面反射
 	if(hasSpecularMap){
 		lowp vec4 _specular = texture(SpecularMap, TexCoord);
@@ -97,15 +78,4 @@ void main(){
 	else{
 		gSpecular = vec4(specular, max(shininess, 0.01f));
 	}
-
-	//粗糙度
-	if(hasRoughnessMap){
-		lowp vec4 _roughness =  texture(RoughnessMap, TexCoord);
-		gRoughness.r = _roughness.r;
-	}
-	else{
-		gRoughness.r = roughness;
-	}
-	gRoughness.b = F0;
-	gRoughness.a = IOR;
 }

@@ -15,9 +15,9 @@ layout(binding = 0, r32ui)  uniform volatile coherent uimage3D texture_albedo;
 layout(binding = 1, r32ui)  uniform volatile coherent uimage3D texture_normal;
 layout(binding = 2, r32ui)  uniform volatile coherent uimage3D texture_emission;
 
-uniform bool hasAlbedoMap;
-uniform bool hasNormalMap;
-uniform bool hasEmissionMap;
+uniform bool hasAlbedoMap = false;
+uniform bool hasNormalMap = false;
+uniform bool hasEmissionMap = false;
 
 layout(binding = 0) uniform sampler2D AlbedoMap;
 layout(binding = 1) uniform sampler2D EmissionMap;

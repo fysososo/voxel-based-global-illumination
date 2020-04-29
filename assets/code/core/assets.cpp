@@ -26,7 +26,7 @@ AssetsManager::AssetsManager()
 	//加载灯光
 	pointLights.push_back(make_shared<Pointlight>(glm::vec3(0.0f, 15.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(15.0f, 15.0f, 15.0f)));
 	//加载模型
-	models["cornell"] = make_shared<Model>("assets/model/cornell-box-notEmpty/cornell_box.obj", glm::vec3(0.0f, 0.0f, 0.0f));
+	models["cornell"] = make_shared<Model>("assets/model/cornell-box/cornell_box.obj", glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 
 	programs["Voxelization"] = make_shared<Program>();
 	programs["Voxelization"]->AttachShader(GL_VERTEX_SHADER, "assets/code/shader/voxelization.vert");

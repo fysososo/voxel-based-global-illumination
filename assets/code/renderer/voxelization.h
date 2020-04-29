@@ -1,7 +1,6 @@
 #pragma once
 #include<array>
 #include "renderer.h"
-#include "../scene/material.h"
 
 class VoxelizationRenderer : public Renderer
 {

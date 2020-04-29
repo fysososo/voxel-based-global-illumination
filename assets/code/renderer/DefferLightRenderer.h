@@ -1,7 +1,6 @@
 #pragma once
 #include<stdafx.h>
 #include "renderer.h"
-#include "../scene/material.h"
 
 class DefferLightRender :
 	public Renderer

@@ -31,7 +31,6 @@ void VoxelizationRenderer::SetMaterialUniforms()
 	//设置逐体素直接光照程序固定参数
 	auto& proginject = AssetsManager::Instance()->programs["injectRadiance"];
 	proginject->Use();
-	proginject->setFloat("F0", 0.04f);
 	proginject->setFloat("traceShadowHit", 0.5f);
 
 	//设置体素化着色器程序固定参数
@@ -416,17 +415,30 @@ void VoxelizationRenderer::GenerateVoxelData()
 	//绘制模型
 	for (auto& model : AssetsManager::Instance()->models) {
 		setModelMat(prog, model.second);
-		for (auto& mesh : model.second->meshes) {
+		for (auto& mesh : model.second->getMeshList()) {
 			//绑定漫反射纹理
-			mesh->material->BindMap(prog, GL_TEXTURE0, Material::en_TEXTURE_ALBEDO);
-			prog->setVec3("albedo", mesh->material->albedo);
+			if (mesh->material->diffuseMap != nullptr){
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, mesh->material->diffuseMap->ID);
+				prog->setBool("hasAlbedoMap", true);
+			}
 
 			//绑定法线纹理
-			mesh->material->BindMap(prog, GL_TEXTURE1, Material::en_TEXTURE_NORMAL);
+			if (mesh->material->normalMap != nullptr) {
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, mesh->material->normalMap->ID);
+				prog->setBool("hasNormalMap", true);
+			}
 
 			//绑定自发光纹理
-			mesh->material->BindMap(prog, GL_TEXTURE2, Material::en_TEXTURE_EMISSION);
-			prog->setVec3("emission", mesh->material->emission);
+			if (mesh->material->emissionMap != nullptr) {
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, mesh->material->emissionMap->ID);
+				prog->setBool("hasEmissionMap", true);
+			}
+
+			prog->setVec3("emission", mesh->material->Ke);
+			prog->setVec3("albedo", mesh->material->Kd);
 
 			mesh->Draw();
 		}
@@ -439,7 +451,7 @@ void VoxelizationRenderer::setModelMat(shared_ptr<Program> prog, shared_ptr<Mode
 	//传递model矩阵
 	glm::mat4 modelM = glm::mat4(1.0f);
 	modelM = glm::translate(modelM, model->position);
-	modelM = glm::scale(modelM, glm::vec3(1.0f, 1.0f, 1.0f));
+	modelM = modelM * glm::scale(modelM, model->scale);
 	prog->setMat4("matrices.model", modelM);
 	prog->setMat4("matrices.normal",glm::inverse(glm::transpose(modelM)));
 }

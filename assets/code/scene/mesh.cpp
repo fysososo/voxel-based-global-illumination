@@ -1,6 +1,5 @@
 #include<stdafx.h>
 #include "mesh.h"
-#include "material.h"
 
 Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, shared_ptr<Material> material)
 {

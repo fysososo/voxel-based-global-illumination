@@ -1,8 +1,5 @@
 #pragma once
 #include <stdafx.h>
-
-class Material;
-
 //shader程序类的基类
 class Program
 {

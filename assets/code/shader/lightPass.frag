@@ -63,21 +63,16 @@ const float diffuseConeWeights[] =
 
 uniform int showMode = 0;
 
-//调试用缓存
-layout(binding = 0, rgba16f) uniform volatile coherent image2D gDebug;
-
 //延迟渲染几何阶段结果
-layout(binding = 1) uniform sampler2D gPosition;
-layout(binding = 2) uniform sampler2D gNormal;
-layout(binding = 3) uniform sampler2D gRoughness;
-layout(binding = 4) uniform sampler2D gMetalness;
-layout(binding = 5) uniform sampler2D gAbledo;
-layout(binding = 6) uniform sampler2D gEmission;
-layout(binding = 7) uniform sampler2D gSpecular;
+layout(binding = 0) uniform sampler2D gPosition;
+layout(binding = 1) uniform sampler2D gNormal;
+layout(binding = 2) uniform sampler2D gAbledo;
+layout(binding = 3) uniform sampler2D gEmission;
+layout(binding = 4) uniform sampler2D gSpecular;
 
 //体素3d纹理数据
-layout(binding = 8) uniform sampler3D voxelRadiance;
-layout(binding = 9) uniform sampler3D voxelTexMipmap[6];
+layout(binding = 5) uniform sampler3D voxelRadiance;
+layout(binding = 6) uniform sampler3D voxelTexMipmap[6];
 
 
 //体素数据
@@ -137,10 +132,7 @@ void main(){
     vec3 albedo = pow(baseColor.xyz, vec3(2.2f));
     // xyz = specular, w = shininess
     vec4 specular = texture(gSpecular, TexCoord);
-	vec4 roughness = texture(gRoughness, TexCoord);
     vec4 emission = texture(gEmission, TexCoord);
-	float metalness = roughness.g;
-	float F0 = roughness.b;
 	
 	vec3 V = normalize(viewPos - pos);
 	vec3 N = normalize(texture(gNormal, TexCoord).xyz);

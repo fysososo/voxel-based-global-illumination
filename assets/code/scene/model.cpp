@@ -2,9 +2,17 @@
 #include "model.h"
 
 
-Model::Model(string const& path, glm::vec3 position, bool gamma) : gammaCorrection(gamma)
+Model::Model(string const& path, glm::vec3 position, glm::vec3 scale, bool gamma) : gammaCorrection(gamma), position(position), scale(scale)
 {
-	loadModel(path, position);
+	loadModel(path);
+}
+
+void Model::Draw()
+{
+	for (unsigned int i = 0; i < meshes.size(); i++)
+	{
+		meshes[i]->Draw();
+	}
 }
 
 void Model::DrawBoundingBox()
@@ -16,24 +24,12 @@ void Model::DrawBoundingBox()
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void Model::Draw()
-{
-	for (unsigned int i = 0; i < meshes.size(); i++)
-	{
-		meshes[i]->Draw();
-	}
-}
-
 Model::~Model()
 {
 }
 
-void Model::loadModel(string const& path, glm::vec3 position)
+void Model::loadModel(string const& path)
 {
-	cout << "开始加载模型：" << endl;
-	cout << path << endl;
-	cout << "请稍等……" << endl;
-	this->position = position;
 	Assimp::Importer importer;
 	scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -43,14 +39,45 @@ void Model::loadModel(string const& path, glm::vec3 position)
 	}
 	directory = path.substr(0, path.find_last_of('/'));
 
+	loadMaterials();//加载材质
 	loadMeshes();//加载网格
 	SetupBoundingBox();//设置包围盒
 
 	scene = nullptr;
-
-	cout << "模型加载完成！" << endl;
 }
 
+void Model::loadMaterials()
+{
+	aiColor3D color;
+	for (unsigned int i = 0; i < scene->mNumMaterials; i++)
+	{
+		aiMaterial* aMat = scene->mMaterials[i];
+		shared_ptr<Material> material = make_shared<Material>();
+
+		//获取材质名
+		material->name = aMat->GetName().C_Str();//获取材质名
+
+		//获取材质属性
+		aMat->Get(AI_MATKEY_COLOR_AMBIENT, color);
+		material->Ka = glm::vec4(color.r, color.g, color.b, 1.0);//获取颜色albedo
+		aMat->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+		material->Kd = glm::vec4(color.r, color.g, color.b, 1.0);//获取漫反射diffuse
+		aMat->Get(AI_MATKEY_COLOR_SPECULAR, color);
+		material->Ks = glm::vec4(color.r, color.g, color.b, 1.0);//获取镜反射specular
+		aMat->Get(AI_MATKEY_COLOR_EMISSIVE, color);
+		material->Ke = glm::vec4(color.r, color.g, color.b, 1.0);//获取自发光emissive
+		aMat->Get(AI_MATKEY_SHININESS, material->shiness);
+
+		//获取贴图
+		material->diffuseMap = loadMaterialTexture(aMat, aiTextureType_DIFFUSE, "texture_diffuse");//漫反射贴图
+		material->specularMap = loadMaterialTexture(aMat, aiTextureType_SPECULAR, "texture_specular");//镜面反射贴图
+		material->normalMap = loadMaterialTexture(aMat, aiTextureType_NORMALS, "texture_normal");//切线空间的法线贴图
+		material->emissionMap = loadMaterialTexture(aMat, aiTextureType_EMISSION_COLOR, "texture_emission");//自发光贴图
+
+		//该材质载入完毕
+		materials.push_back(material);
+	}
+}
 
 void Model::loadMeshes()
 {
@@ -59,10 +86,7 @@ void Model::loadMeshes()
 		aiMesh* mesh = scene->mMeshes[i];
 		vector<Vertex> vertices;
 		vector<GLuint> indices;
-		shared_ptr<Material> material = make_shared<Material>() ;
-		string meshFileName = string(mesh->mName.C_Str());
-		string meshName = meshFileName.substr(0, meshFileName.find_last_of('_'));
-		string materialName = meshFileName.substr(meshName.length() + 1, meshFileName.length() - meshFileName.find_last_of('_') - 1);
+		shared_ptr<Material> material;
 
 		//遍历获取顶点
 		for (GLuint i = 0; i < mesh->mNumVertices; i++)
@@ -94,19 +118,29 @@ void Model::loadMeshes()
 			{
 				vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 			}
-			if (mesh->HasTangentsAndBitangents()) {
-				//获取切线
+
+			//获取切线
+			if (mesh->mTangents != NULL) {
 				vector.x = mesh->mTangents[i].x;
 				vector.y = mesh->mTangents[i].y;
 				vector.z = mesh->mTangents[i].z;
 				vertex.Tangent = vector;
+			}
+			else {
+				vertex.Tangent = glm::normalize(glm::cross(vertex.Normal, glm::vec3(0.0f, 0.0f, 1.0f)));
+			}
 
+			if(mesh->mBitangents != NULL){
 				//获取副切线
 				vector.x = mesh->mBitangents[i].x;
 				vector.y = mesh->mBitangents[i].y;
 				vector.z = mesh->mBitangents[i].z;
 				vertex.Bitangent = vector;
 			}
+			else {
+				vertex.Bitangent = glm::normalize(glm::cross(vertex.Normal, vertex.Tangent));
+			}
+
 			//该顶点载入完毕
 			vertices.push_back(vertex);
 
@@ -125,25 +159,107 @@ void Model::loadMeshes()
 			}
 		}
 
-		//加载材质
-		material->loadMaterial(directory + "/" + materialName + ".pbr");
-
-		materials.push_back(material);
+		//获取材质
+		string matName = scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str();
+		for (GLint i = 0; i < materials.size(); i++)
+		{
+			if (materials[i]->name == matName)
+			{
+				material = materials[i];
+				break;
+			}
+		}
 
 		//该网格载入完毕
 		meshes.push_back(make_shared<Mesh>(vertices, indices, material));
 	}
 }
 
+shared_ptr<Texture> Model::loadMaterialTexture(aiMaterial* mat, aiTextureType type, string typeName)
+{
+	shared_ptr<Texture> MatTextures;
 
+	//获取该贴图的文件路径
+	aiString str;
+	mat->GetTexture(type, 0, &str);
+
+	if (str.length == 0) {
+		MatTextures = nullptr;
+		return MatTextures;
+	}
+
+	// 检查该纹理是否已经加载（与已加载纹理比对文件路径）
+	bool skip = false;
+	for (GLuint j = 0; j < textures.size(); j++)
+	{
+		if (std::strcmp(textures[j]->Path.data(), str.C_Str()) == 0)
+		{
+			//已加载，只获取指针
+			MatTextures = textures[j];
+			skip = true;
+			break;
+		}
+	}
+	if (!skip)
+	{
+		//未加载，先创建该材质
+		shared_ptr<Texture> texture = make_shared<Texture>();
+		texture->ID = TextureFromFile(str.C_Str(), this->directory);
+		texture->Type = typeName;
+		texture->Path = str.C_Str();
+		textures.push_back(texture);
+		//再获取指针
+		MatTextures = textures.back();
+	}
+
+	return MatTextures;
+}
+
+GLuint Model::TextureFromFile(const GLchar* path, const string& directory, GLboolean gamma)
+{
+	string filename = string(path);
+	filename = directory + '/' + filename;
+
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+
+	GLint width, height, nrComponents;
+	unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+	if (data)
+	{
+		GLenum format;
+		if (nrComponents == 1)
+			format = GL_RED;
+		else if (nrComponents == 3)
+			format = GL_RGB;
+		else if (nrComponents == 4)
+			format = GL_RGBA;
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Texture failed to load at path: " << path << std::endl;
+		stbi_image_free(data);
+	}
+
+	return textureID;
+}
 
 void Model::SetupBoundingBox()
 {
 	//计算包围盒的中点和尺寸
-	boundingBox.MinPoint += position;
-	boundingBox.MaxPoint += position;
 	boundingBox.Center = (boundingBox.MinPoint + boundingBox.MaxPoint) * 0.5f;
-	boundingBox.Size = boundingBox.MaxPoint- boundingBox.MinPoint;
+	boundingBox.Size = boundingBox.MaxPoint - boundingBox.MinPoint;
 
 	//设置VAO
 	GLfloat vertices[] =

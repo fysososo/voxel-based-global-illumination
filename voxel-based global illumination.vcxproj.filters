@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="assets\code\scene\material.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="assets\code\scene\mesh.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -62,9 +59,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="assets\code\scene\material.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="assets\code\scene\mesh.h">
       <Filter>头文件</Filter>
     </ClInclude>
